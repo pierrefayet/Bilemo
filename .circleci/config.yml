@@ -1,32 +1,38 @@
-# This config was automatically generated from your source code
-# Stacks detected: deps:php:.
 version: 2.1
-orbs:
-  php: circleci/php@1
+
 jobs:
-  test-php:
-    # Install php packages and run tests
-    docker:
-      - image: cimg/php:8.2.7-node
-    steps:
-      - checkout
-      - php/install-packages
-      - run:
-          name: run tests
-          command: ./vendor/bin/phpunit
-  deploy:
-    # This is an example deploy job, not actually used by the workflow
-    docker:
-      - image: cimg/base:stable
-    steps:
-      # Replace this with steps to deploy to users
-      - run:
-          name: deploy
-          command: '#e.g. ./deploy.sh'
-workflows:
-  build-and-test:
-    jobs:
-      - test-php
-    # - deploy:
-    #     requires:
-    #       - test-php
+    build:
+
+        docker:
+            # Specify the version you desire here
+            - image: cimg/php:8.1.27-node
+            - image: cimg/mysql:8.0
+              environment:
+                  MYSQL_DATABASE: circle_test
+                  MYSQL_ROOT_PASSWORD: root
+
+        steps:
+            - checkout
+
+            - run: sudo apt update # PHP CircleCI 2.0 Configuration File# PHP CircleCI 2.0 Configuration File sudo apt install zlib1g-dev libsqlite3-dev
+
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "composer.json" }}
+                      - v1-dependencies-
+
+            - run: composer install -n --prefer-dist
+
+            - save_cache:
+                  key: v1-dependencies-{{ checksum "composer.json" }}
+                  paths:
+                      - ./vendor
+            - restore_cache:
+                  keys:
+                      - node-v1-{{ checksum "package.json" }}
+                      - node-v1-
+
+            - run: bin/console doctrine:schema:update --dump-sql -f --env=test
+            - run: yes | php bin/console doctrine:fixtures:load --env=test || true
+            - run: vendor/bin/phpstan
+            - run: ./vendor/bin/phpunit
