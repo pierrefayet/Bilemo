@@ -95,9 +95,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * @see PasswordAuthenticatedUserInterface
+     * @return string|null
+     *
      */
-    public function getPassword(): string
+    public function getPassword(): ?string
     {
         return $this->password;
     }
