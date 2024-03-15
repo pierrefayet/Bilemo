@@ -33,6 +33,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
+    /**
+     * @var Collection<int, Customer> $customers
+     */
     #[ORM\OneToMany(targetEntity: Customer::class, mappedBy: 'User')]
     private Collection $customers;
 
