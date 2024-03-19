@@ -22,7 +22,7 @@ class CustomerRepository extends ServiceEntityRepository
     }
 
     //    /**
-    //     * @return Customer[] Returns an array of Customer objects
+    //     * @return CustomerFixture[] Returns an array of CustomerFixture objects
     //     */
     //    public function findByExampleField($value): array
     //    {
@@ -36,7 +36,7 @@ class CustomerRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?Customer
+    //    public function findOneBySomeField($value): ?CustomerFixture
     //    {
     //        return $this->createQueryBuilder('c')
     //            ->andWhere('c.exampleField = :val')

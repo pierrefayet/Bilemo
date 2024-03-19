@@ -22,7 +22,7 @@ class PhoneRepository extends ServiceEntityRepository
     }
 
     //    /**
-    //     * @return Phone[] Returns an array of Phone objects
+    //     * @return PhoneFixture[] Returns an array of PhoneFixture objects
     //     */
     //    public function findByExampleField($value): array
     //    {
@@ -36,7 +36,7 @@ class PhoneRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?Phone
+    //    public function findOneBySomeField($value): ?PhoneFixture
     //    {
     //        return $this->createQueryBuilder('p')
     //            ->andWhere('p.exampleField = :val')
