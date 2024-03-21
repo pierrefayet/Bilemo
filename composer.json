@@ -12,6 +12,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.3",
         "doctrine/orm": "^3.1",
         "fakerphp/faker": "^1.23",
+        "lexik/jwt-authentication-bundle": "^2.20",
         "symfony/console": "7.0.*",
         "symfony/dotenv": "7.0.*",
         "symfony/flex": "^2",
@@ -29,7 +30,9 @@
         "symfony/browser-kit": "7.0.*",
         "symfony/css-selector": "7.0.*",
         "symfony/maker-bundle": "^1.56",
-        "symfony/phpunit-bridge": "^7.0"
+        "symfony/phpunit-bridge": "^7.0",
+        "symfony/stopwatch": "7.0.*",
+        "symfony/web-profiler-bundle": "7.0.*"
     },
     "config": {
         "allow-plugins": {

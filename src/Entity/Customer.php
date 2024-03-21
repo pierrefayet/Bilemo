@@ -45,7 +45,8 @@ class Customer
 
     #[ORM\ManyToOne(inversedBy: 'customers')]
     #[Groups(['getCustomers'])]
-    private ?User $User = null;
+    #[ORM\JoinColumn(nullable: true)]
+    private ?User $user = null;
 
     public function __construct()
     {
@@ -107,12 +108,12 @@ class Customer
 
     public function getUser(): ?User
     {
-        return $this->User;
+        return $this->user;
     }
 
-    public function setUser(?User $User): static
+    public function setUser(?User $user): static
     {
-        $this->User = $User;
+        $this->user = $user;
 
         return $this;
     }

@@ -28,12 +28,23 @@ class AppFixture extends Fixture
         for ($i = 0; $i < 5; ++$i) {
             $user = new User();
             $user->setEmail($this->faker->unique()->email);
-            $password = $this->passwordHashed->hashPassword($user, 'TEST');
-            $user->setPassword((string) $password);
+            $password = $this->passwordHashed->hashPassword($user, 'password');
+            $user->setPassword($password);
+            $user->setLastName($this->faker->unique()->lastName);
+            $user->setFirstName($this->faker->unique()->firstName);
             $user->setRoles(['ROLE_USER']);
             $manager->persist($user);
             $users[] = $user;
         }
+
+        $admin = new User();
+        $admin->setEmail('admin@bilemo.com');
+        $password = $this->passwordHashed->hashPassword($admin, 'password');
+        $admin->setPassword($password);
+        $admin->setLastName($this->faker->unique()->lastName);
+        $admin->setFirstName($this->faker->unique()->firstName);
+        $admin->setRoles(['ROLE_ADMIN']);
+        $manager->persist($admin);
 
         for ($i = 0; $i < 5; ++$i) {
             $customer = new Customer();

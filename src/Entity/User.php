@@ -9,29 +9,43 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
+#[Groups('getCustomers')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['getCustomers'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
     #[Assert\NotBlank(message: "L'adresse email ne doit pas être vide.")]
     #[Assert\Email(message: "L'adresse email '{{ value }}' n'est pas valide.")]
-    #[Groups(['getCustomers'])]
     private ?string $email = null;
+
+    #[ORM\Column(length: 255)]
+    #[Assert\Length(min: 3, max: 255,
+        minMessage: 'The first name must be at least {{ limit }} characters',
+        maxMessage: 'The first name must be no more than {{ limit }} characters')]
+    private ?string $firstName = null;
+
+    #[ORM\Column(length: 255)]
+    #[Assert\Length(
+        min: 3,
+        max: 255,
+        minMessage: 'The last name must be at least {{ limit }} characters',
+        maxMessage: 'The last name must be no more than {{ limit }} characters')]
+    private ?string $lastName = null;
 
     /**
      * @var list<string> The user roles
      */
     #[ORM\Column]
-    #[Groups(['getCustomers'])]
+    #[Ignore]
     private array $roles = [];
 
     /**
@@ -44,13 +58,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         max: 4096,
         minMessage: 'Le mot de passe doit contenir au moins {{ limit }} caractères.',
     )]
-    #[Groups(['getCustomers'])]
+    #[Ignore]
     private ?string $password = null;
 
     /**
      * @var Collection<int, Customer> $customers
      */
-    #[ORM\OneToMany(targetEntity: Customer::class, mappedBy: 'User')]
+    #[ORM\OneToMany(targetEntity: Customer::class, mappedBy: 'user')]
+    #[Ignore]
     private Collection $customers;
 
     public function __construct()
@@ -86,6 +101,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
+     * Method getUsername returns the field used for authentication.
+     */
+    public function getUsername(): string
+    {
+        return $this->getUserIdentifier();
+    }
+
+    /**
      * @see UserInterface
      *
      * @return list<string>
@@ -118,6 +141,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->password = $password;
 
         return $this;
+    }
+
+    public function getFirstName(): ?string
+    {
+        return $this->firstName;
+    }
+
+    public function setFirstName(?string $firstName): void
+    {
+        $this->firstName = $firstName;
+    }
+
+    public function getLastName(): ?string
+    {
+        return $this->lastName;
+    }
+
+    public function setLastName(?string $lastName): void
+    {
+        $this->lastName = $lastName;
     }
 
     /**

@@ -66,9 +66,13 @@ class Phone
     private ?string $stockQuantity = null;
 
     #[ORM\Column]
-    #[Assert\NotBlank]
     #[Assert\Type("\DateTimeImmutable")]
     private ?\DateTimeImmutable $releaseDate = null;
+
+    public function __construct()
+    {
+        $this->releaseDate = new \DateTimeImmutable();
+    }
 
     public function getId(): ?int
     {
