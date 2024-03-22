@@ -24,9 +24,19 @@ class CustomerRepository extends ServiceEntityRepository
     public function findAllCustomersWithPagination($page, $limit): array
     {
         return $this->createQueryBuilder('c')
-            ->leftJoin('c.users', 'u')
             ->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findCustomerById(array $customerList): array
+    {
+        return $this->createQueryBuilder('c')
+            ->leftJoin('c.users', 'u')
+            ->addSelect('u')
+            ->where('c in (:customerList)')
+            ->setParameter('customerList', $customerList)
             ->getQuery()
             ->getResult();
     }

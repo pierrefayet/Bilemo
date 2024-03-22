@@ -31,25 +31,24 @@ class PhoneController extends AbstractController
     #[Route('/phones', name: 'list_phones', requirements: ['page' => '\d+', 'limit' => '\d+'], methods: ['GET'])]
     public function getAllPhone(Request $request, TagAwareCacheInterface $cache, PhoneRepository $phoneRepository): JsonResponse
     {
-        $page = $request->get('page', 1);
-        $limit = $request->get('limit', 3);
+        $page = (int) $request->get('page', 1);
+        $limit = (int) $request->get('limit', 3);
 
-        if (!is_int($page) || !is_int($limit)) {
+        if (0 === $page || 0 === $limit) {
             return $this->json(['error' => 'invalid arguments'], Response::HTTP_BAD_REQUEST);
         }
 
         $idCache = 'getAllPhone'.$page.'-'.$limit;
 
         $phoneList = $cache->get($idCache, function (ItemInterface $item) use ($phoneRepository, $page, $limit) {
-            echo "This element is not in cache ! \n";
             $item->tag('phonesCache');
 
             return $phoneRepository->findAllPhonesWithPagination($page, $limit);
         });
 
-        return $this->json([
-            $phoneList, Response::HTTP_OK, true,
-        ]);
+        return $this->json(
+            $phoneList, Response::HTTP_OK
+        );
     }
 
     /**
@@ -100,7 +99,8 @@ class PhoneController extends AbstractController
         Phone $currentPhone,
         Request $request,
         SerializerInterface $serializer,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        TagAwareCacheInterface $cache
     ): Response {
         $updatePhone = $serializer->deserialize(
             $request->getContent(),
@@ -111,6 +111,7 @@ class PhoneController extends AbstractController
 
         $entityManager->persist($updatePhone);
         $entityManager->flush();
+        $cache->invalidateTags(['customersCache']);
 
         return new Response(
             null, Response::HTTP_NO_CONTENT

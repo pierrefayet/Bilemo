@@ -46,8 +46,9 @@ class CustomerController extends AbstractController
 
         $customerList = $cache->get($idCache, function (ItemInterface $item) use ($customerRepository, $page, $limit) {
             $item->tag('customersCache');
+            $customers = $customerRepository->findAllCustomersWithPagination($page, $limit);
 
-            return $customerRepository->findAllCustomersWithPagination($page, $limit);
+            return $customerRepository->findCustomerById($customers);
         });
 
         return $this->json($customerList, Response::HTTP_OK, [], ['groups' => ['customer:details', 'user:details']]);
@@ -81,12 +82,12 @@ class CustomerController extends AbstractController
         $this->entityManager->flush();
 
         $content = $request->toArray();
-        $idUser = $content['id'] ?? -1;
+        $idUser = $content['userId'] ?? -1;
 
-        $newCustomer->setUser($userRepository->find($idUser));
+        $newCustomer->addUser($userRepository->find($idUser));
 
         return $this->json(
-            $newCustomer, Response::HTTP_CREATED, [], ['groups' => 'getCustomers']
+            $newCustomer, Response::HTTP_CREATED, [], ['groups' => ['customer:details', 'user:details']]
         );
     }
 
@@ -98,7 +99,8 @@ class CustomerController extends AbstractController
     public function updateCustomer(
         Customer $currentCustomer,
         Request $request,
-        UserRepository $userRepository
+        UserRepository $userRepository,
+        TagAwareCacheInterface $cache
     ): JsonResponse {
         $updateCustomer = $this->serializer->deserialize(
             $request->getContent(),
@@ -108,15 +110,16 @@ class CustomerController extends AbstractController
         );
 
         $content = $request->toArray();
-        $idUser = $content['id'] ?? -1;
+        $idUser = $content['userId'] ?? -1;
 
-        $updateCustomer->setUser($userRepository->find($idUser));
+        $updateCustomer->addUser($userRepository->find($idUser));
+        $cache->invalidateTags(['customersCache']);
 
         $this->entityManager->persist($updateCustomer);
         $this->entityManager->flush();
 
         return $this->json(
-            $updateCustomer, Response::HTTP_NO_CONTENT
+            $updateCustomer, Response::HTTP_NO_CONTENT, [], ['groups' => ['customer:details', 'user:details']]
         );
     }
 
