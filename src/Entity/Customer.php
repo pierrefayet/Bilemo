@@ -3,9 +3,11 @@
 namespace App\Entity;
 
 use App\Repository\CustomerRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
 class Customer
@@ -13,14 +15,14 @@ class Customer
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['getCustomers'])]
+    #[Groups(['customer:details'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\Length(min: 3, max: 255,
         minMessage: 'The first name must be at least {{ limit }} characters',
         maxMessage: 'The first name must be no more than {{ limit }} characters')]
-    #[Groups(['getCustomers'])]
+    #[Groups(['customer:details'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
@@ -29,33 +31,62 @@ class Customer
         max: 255,
         minMessage: 'The last name must be at least {{ limit }} characters',
         maxMessage: 'The last name must be no more than {{ limit }} characters')]
-    #[Groups(['getCustomers'])]
+    #[Groups(['customer:details'])]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\Email(
         message: 'The email {{ value }} is not a valid email.',
     )]
-    #[Groups(['getCustomers'])]
+    #[Groups(['customer:details'])]
     private ?string $email = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
-    #[Groups(['getCustomers'])]
+    #[Groups(['customer:details'])]
     private ?\DateTimeImmutable $createdAt = null;
 
-    #[ORM\ManyToOne(inversedBy: 'customers')]
-    #[Groups(['getCustomers'])]
-    #[ORM\JoinColumn(nullable: true)]
-    private ?User $user = null;
+    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'customers')]
+    #[Groups(['customer:details'])]
+    private ?Collection $users = null;
 
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable();
+        $this->users = new ArrayCollection();
+    }
+
+    public function getUsers(): ?Collection
+    {
+        return $this->users;
+    }
+
+    public function setUsers(?Collection $users): void
+    {
+        $this->users = $users;
     }
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function addUser(User $user): self
+    {
+        if (!$this->users->contains($user)) {
+            $this->users[] = $user;
+            $user->addCustomer($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUser(User $user): self
+    {
+        if ($this->users->removeElement($user)) {
+            $user->removeCustomer($this);
+        }
+
+        return $this;
     }
 
     public function getFirstName(): ?string
@@ -102,18 +133,6 @@ class Customer
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
-
-        return $this;
-    }
-
-    public function getUser(): ?User
-    {
-        return $this->user;
-    }
-
-    public function setUser(?User $user): static
-    {
-        $this->user = $user;
 
         return $this;
     }

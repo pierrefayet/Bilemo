@@ -7,7 +7,6 @@ use App\Repository\CustomerRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Bundle\MakerBundle\Validator;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,7 +14,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
@@ -32,15 +30,15 @@ class CustomerController extends AbstractController
     /**
      * This code allows you to retrieve all customers.
      */
-    #[Route('/customers', name: 'list_customer', requirements: ['page' => '\d+', 'limit' => '\d+'], methods: ['GET'])]
+    #[Route('/customers', name: 'list_customer', methods: ['GET'])]
     public function getAllCustomer(
         Request $request,
         TagAwareCacheInterface $cache, CustomerRepository $customerRepository): JsonResponse
     {
-        $page = $request->get('page', 1);
-        $limit = $request->get('limit', 3);
+        $page = (int) $request->get('page', 1);
+        $limit = (int) $request->get('limit', 3);
 
-        if (!is_int($page) || !is_int($limit)) {
+        if (0 === $page || 0 === $limit) {
             return $this->json(['error' => 'invalid arguments'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -52,7 +50,7 @@ class CustomerController extends AbstractController
             return $customerRepository->findAllCustomersWithPagination($page, $limit);
         });
 
-        return $this->json($customerList, Response::HTTP_OK, [], ['groups' => 'getCustomers']);
+        return $this->json($customerList, Response::HTTP_OK, [], ['groups' => ['customer:details', 'user:details']]);
     }
 
     /**
@@ -62,7 +60,7 @@ class CustomerController extends AbstractController
     public function getDetailCustomer(Customer $customer): JsonResponse
     {
         return $this->json(
-            $customer, Response::HTTP_OK, [], ['groups' => 'getCustomers']
+            $customer, Response::HTTP_OK, [], ['groups' => 'customer:details', 'user:details']
         );
     }
 

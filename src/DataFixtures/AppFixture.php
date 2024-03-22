@@ -46,15 +46,22 @@ class AppFixture extends Fixture
         $admin->setRoles(['ROLE_ADMIN']);
         $manager->persist($admin);
 
+        $customers = [];
         for ($i = 0; $i < 5; ++$i) {
             $customer = new Customer();
             $customer->setEmail($this->faker->unique()->email);
             $customer->setLastName($this->faker->unique()->lastName);
             $customer->setFirstName($this->faker->unique()->firstName);
             $customer->setCreatedAt(new \DateTimeImmutable());
-            $randomUser = $users[rand(0, count($users) - 1)];
-            $customer->setUser($randomUser);
+            shuffle($users);
+            for ($j = 0; $j < 5; ++$j) {
+                $user = $users[$j];
+                $user->addCustomer($customer);
+                $customer->addUser($user);
+                $manager->persist($user);
+            }
             $manager->persist($customer);
+            $customers[] = $customer;
         }
 
         for ($i = 0; $i < 5; ++$i) {

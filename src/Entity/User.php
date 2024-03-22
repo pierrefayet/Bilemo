@@ -14,23 +14,25 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
-#[Groups('getCustomers')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['customer:details'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
     #[Assert\NotBlank(message: "L'adresse email ne doit pas être vide.")]
     #[Assert\Email(message: "L'adresse email '{{ value }}' n'est pas valide.")]
+    #[Groups(['customer:details'])]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\Length(min: 3, max: 255,
         minMessage: 'The first name must be at least {{ limit }} characters',
         maxMessage: 'The first name must be no more than {{ limit }} characters')]
+    #[Groups(['customer:details'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
@@ -39,6 +41,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         max: 255,
         minMessage: 'The last name must be at least {{ limit }} characters',
         maxMessage: 'The last name must be no more than {{ limit }} characters')]
+    #[Groups(['customer:details'])]
     private ?string $lastName = null;
 
     /**
@@ -64,8 +67,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Customer> $customers
      */
-    #[ORM\OneToMany(targetEntity: Customer::class, mappedBy: 'user')]
-    #[Ignore]
+    #[ORM\ManyToMany(targetEntity: Customer::class, inversedBy: 'users')]
+    #[ORM\JoinTable(name: 'user_customer')]
     private Collection $customers;
 
     public function __construct()
@@ -182,18 +185,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if (!$this->customers->contains($customer)) {
             $this->customers->add($customer);
-            $customer->setUser($this);
+            $customer->addUser($this);
         }
 
         return $this;
     }
 
-    public function removeCustomer(Customer $customer): static
+    public function removeCustomer(Customer $customer): self
     {
         if ($this->customers->removeElement($customer)) {
-            if ($customer->getUser() === $this) {
-                $customer->setUser(null);
-            }
+            $customer->removeUser($this);
         }
 
         return $this;
