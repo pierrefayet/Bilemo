@@ -10,7 +10,6 @@ use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -79,7 +78,7 @@ class CustomerController extends AbstractController
      */
     #[Route('/customers', name: 'create_customer', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to create a customer')]
-    public function createCustomer(Request $request, UserRepository $userRepository, ValidatorInterface $validator): JsonResponse
+    public function createCustomer(Request $request, UserRepository $userRepository, ValidatorInterface $validator): Response
     {
         $newCustomer = $this->serializer->deserialize($request->getContent(), Customer::class, 'json');
         $errors = $validator->validate($newCustomer);
@@ -104,9 +103,10 @@ class CustomerController extends AbstractController
 
         $newCustomer->addUser($user);
 
-        return $this->json(
-            $newCustomer, Response::HTTP_CREATED, [], ['groups' => ['customer:details', 'user:details']]
-        );
+        $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
+        $jsonContent = $this->serializer->serialize($newCustomer, 'json', $context);
+
+        return new Response($jsonContent, Response::HTTP_CREATED, ['Content-Type' => 'application/json']);
     }
 
     /**
@@ -119,7 +119,7 @@ class CustomerController extends AbstractController
         Request $request,
         UserRepository $userRepository,
         TagAwareCacheInterface $cache
-    ): JsonResponse {
+    ): Response {
         $updateCustomer = $this->serializer->deserialize(
             $request->getContent(),
             Customer::class,
@@ -142,9 +142,10 @@ class CustomerController extends AbstractController
         $cache->invalidateTags(['customersCache']);
         $this->entityManager->flush();
 
-        return $this->json(
-            $updateCustomer, Response::HTTP_NO_CONTENT, [], ['groups' => ['customer:details', 'user:details']]
-        );
+        $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
+        $jsonContent = $this->serializer->serialize($updateCustomer, 'json', $context);
+
+        return new Response($jsonContent, Response::HTTP_CREATED, ['Content-Type' => 'application/json']);
     }
 
     /**

@@ -7,10 +7,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation\Groups;
-use JMS\Serializer\Annotation\Type;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Customer
 {
     #[ORM\Id]
@@ -44,7 +44,6 @@ class Customer
 
     #[ORM\Column(type: 'datetime_immutable')]
     #[Groups(['customer:details'])]
-    #[Type('date-time')]
     private ?\DateTimeImmutable $createdAt = null;
 
     /**
@@ -143,7 +142,6 @@ class Customer
 
     public function setCreatedAt(?\DateTimeImmutable $createdAt): self
     {
-
         $this->createdAt = $createdAt;
 
         return $this;
@@ -152,8 +150,7 @@ class Customer
     #[ORM\PrePersist]
     public function prePersist(): void
     {
-        if (null === $this->getCreatedAt()) {
-            $this->createdAt = new \DateTimeImmutable();
-        }
+        $this->createdAt = new \DateTimeImmutable();
+        $this->users = new ArrayCollection();
     }
 }
