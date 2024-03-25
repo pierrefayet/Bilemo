@@ -25,7 +25,7 @@ class AppFixture extends Fixture
     public function load(ObjectManager $manager): void
     {
         $users = [];
-        for ($i = 0; $i < 5; ++$i) {
+        for ($i = 0; $i < 10; ++$i) {
             $user = new User();
             $user->setEmail($this->faker->unique()->email);
             $password = $this->passwordHashed->hashPassword($user, 'password');
@@ -47,7 +47,7 @@ class AppFixture extends Fixture
         $manager->persist($admin);
 
         $customers = [];
-        for ($i = 0; $i < 5; ++$i) {
+        for ($i = 0; $i < 10; ++$i) {
             $customer = new Customer();
             $customer->setEmail($this->faker->unique()->email);
             $customer->setLastName($this->faker->unique()->lastName);
@@ -64,7 +64,7 @@ class AppFixture extends Fixture
             $customers[] = $customer;
         }
 
-        for ($i = 0; $i < 5; ++$i) {
+        for ($i = 0; $i < 10; ++$i) {
             $phone = new Phone();
             $phone->setBatteryLife($this->faker->numberBetween(10, 100).' heures');
             $phone->setCameraDetails($this->faker->numberBetween(12, 108).'MP');

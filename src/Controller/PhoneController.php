@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Phone;
 use App\Repository\PhoneRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use JMS\Serializer\DeserializationContext;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -12,8 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use Symfony\Component\Serializer\SerializerInterface;
+use JMS\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
@@ -31,12 +31,16 @@ class PhoneController extends AbstractController
     #[Route('/phones', name: 'list_phones', requirements: ['page' => '\d+', 'limit' => '\d+'], methods: ['GET'])]
     public function getAllPhone(Request $request, TagAwareCacheInterface $cache, PhoneRepository $phoneRepository): JsonResponse
     {
-        $page = (int) $request->get('page', 1);
-        $limit = (int) $request->get('limit', 3);
-
-        if (0 === $page || 0 === $limit) {
-            return $this->json(['error' => 'invalid arguments'], Response::HTTP_BAD_REQUEST);
-        }
+        $page = max(filter_var(
+            $request->get('page', 1),
+            FILTER_VALIDATE_INT,
+            ['options' => ['default' => 1]]),
+            1);
+        $limit = max(filter_var(
+            $request->get('limit', 3),
+            FILTER_VALIDATE_INT,
+            ['options' => ['default' => 3]]),
+            1);
 
         $idCache = 'getAllPhone'.$page.'-'.$limit;
 
@@ -106,7 +110,7 @@ class PhoneController extends AbstractController
             $request->getContent(),
             Phone::class,
             'json',
-            [AbstractNormalizer::OBJECT_TO_POPULATE => $currentPhone]
+            DeserializationContext::create()->setAttribute('target', $currentPhone)
         );
 
         $entityManager->persist($updatePhone);

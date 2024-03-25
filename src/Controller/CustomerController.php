@@ -6,14 +6,15 @@ use App\Entity\Customer;
 use App\Repository\CustomerRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use JMS\Serializer\DeserializationContext;
+use JMS\Serializer\SerializationContext;
+use JMS\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
@@ -33,14 +34,18 @@ class CustomerController extends AbstractController
     #[Route('/customers', name: 'list_customer', methods: ['GET'])]
     public function getAllCustomer(
         Request $request,
-        TagAwareCacheInterface $cache, CustomerRepository $customerRepository): JsonResponse
+        TagAwareCacheInterface $cache, CustomerRepository $customerRepository): Response
     {
-        $page = (int) $request->get('page', 1);
-        $limit = (int) $request->get('limit', 3);
-
-        if (0 === $page || 0 === $limit) {
-            return $this->json(['error' => 'invalid arguments'], Response::HTTP_BAD_REQUEST);
-        }
+        $page = max(filter_var(
+            $request->get('page', 1),
+            FILTER_VALIDATE_INT,
+            ['options' => ['default' => 1]]),
+            1);
+        $limit = max(filter_var(
+            $request->get('limit', 3),
+            FILTER_VALIDATE_INT,
+            ['options' => ['default' => 3]]),
+            1);
 
         $idCache = 'getAllCustomer'.$page.'-'.$limit;
 
@@ -48,21 +53,25 @@ class CustomerController extends AbstractController
             $item->tag('customersCache');
             $customers = $customerRepository->findAllCustomersWithPagination($page, $limit);
 
-            return $customerRepository->findCustomerById($customers);
+            return $customerRepository->findUsersByCustomer($customers);
         });
 
-        return $this->json($customerList, Response::HTTP_OK, [], ['groups' => ['customer:details', 'user:details']]);
+        $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
+        $jsonContent = $this->serializer->serialize($customerList, 'json', $context);
+
+        return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
     /**
      * This code allows you to retrieve a customer.
      */
     #[Route('/customers/{id}', name: 'detail_customer', methods: ['GET'])]
-    public function getDetailCustomer(Customer $customer): JsonResponse
+    public function getDetailCustomer(Customer $customer): Response
     {
-        return $this->json(
-            $customer, Response::HTTP_OK, [], ['groups' => 'customer:details', 'user:details']
-        );
+        $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
+        $jsonContent = $this->serializer->serialize($customer, 'json', $context);
+
+        return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
     /**
@@ -78,13 +87,22 @@ class CustomerController extends AbstractController
         if ($errors->count() > 0) {
             return $this->json($errors, Response::HTTP_BAD_REQUEST);
         }
+
         $this->entityManager->persist($newCustomer);
         $this->entityManager->flush();
 
         $content = $request->toArray();
         $idUser = $content['userId'] ?? -1;
 
-        $newCustomer->addUser($userRepository->find($idUser));
+        $user = $userRepository->find($idUser);
+
+        if (null === $user) {
+            return $this->json(
+                ['error' => 'user is not found'], Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        $newCustomer->addUser($user);
 
         return $this->json(
             $newCustomer, Response::HTTP_CREATED, [], ['groups' => ['customer:details', 'user:details']]
@@ -106,14 +124,23 @@ class CustomerController extends AbstractController
             $request->getContent(),
             Customer::class,
             'json',
-            [AbstractNormalizer::OBJECT_TO_POPULATE => $currentCustomer]
+            DeserializationContext::create()->setAttribute('target', $currentCustomer)
         );
 
         $content = $request->toArray();
-        $idUser = $content['userId'] ?? -1;
+        $userId = $content['userId'] ?? -1;
 
-        $updateCustomer->addUser($userRepository->find($idUser));
+        if ($userId) {
+            $user = $userRepository->find($userId);
+            if (!$user) {
+                return $this->json(['error' => 'User not found'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $currentCustomer->addUser($user);
+        }
+
         $cache->invalidateTags(['customersCache']);
+        dd($updateCustomer->getCreatedAt());
 
         $this->entityManager->persist($updateCustomer);
         $this->entityManager->flush();

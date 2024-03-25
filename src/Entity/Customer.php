@@ -4,10 +4,11 @@ namespace App\Entity;
 
 use App\Repository\CustomerRepository;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation\Groups;
+use JMS\Serializer\Annotation\Type;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
 class Customer
@@ -43,11 +44,15 @@ class Customer
 
     #[ORM\Column(type: 'datetime_immutable')]
     #[Groups(['customer:details'])]
+    #[Type('date-time')]
     private ?\DateTimeImmutable $createdAt = null;
 
+    /**
+     * @var Collection<int, User>
+     */
     #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'customers')]
     #[Groups(['customer:details'])]
-    private ?Collection $users = null;
+    private Collection $users;
 
     public function __construct()
     {
@@ -55,12 +60,18 @@ class Customer
         $this->users = new ArrayCollection();
     }
 
-    public function getUsers(): ?Collection
+    /**
+     * @return Collection<int, User>
+     */
+    public function getUsers(): Collection
     {
         return $this->users;
     }
 
-    public function setUsers(?Collection $users): void
+    /**
+     * @param Collection<int, User> $users
+     */
+    public function setUsers(Collection $users): void
     {
         $this->users = $users;
     }
@@ -130,10 +141,20 @@ class Customer
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    public function setCreatedAt(?\DateTimeImmutable $createdAt): self
     {
-        $this->createdAt = $createdAt;
+        if (null === $this->createdAt && null === $createdAt) {
+            $this->createdAt = new \DateTimeImmutable();
+        }
 
         return $this;
+    }
+
+    #[ORM\PrePersist]
+    public function prePersist(): void
+    {
+        if (null === $this->getCreatedAt()) {
+            $this->createdAt = new \DateTimeImmutable();
+        }
     }
 }

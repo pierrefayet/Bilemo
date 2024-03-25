@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Customer;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -21,23 +22,41 @@ class CustomerRepository extends ServiceEntityRepository
         parent::__construct($registry, Customer::class);
     }
 
-    public function findAllCustomersWithPagination($page, $limit): array
+    /**
+     * Returns a list of customer.
+     *
+     * @return Customer[]
+     */
+    public function findAllCustomersWithPagination(int $page, int $limit): array
     {
-        return $this->createQueryBuilder('c')
+        /** @var Customer[] $customers * */
+        $customers = $this->createQueryBuilder('c')
             ->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
+
+        return $customers;
     }
 
-    public function findCustomerById(array $customerList): array
+    /**
+     *
+     * Returns a list of User associated with the Customer.
+     * @param array<int|Customer> $customerList
+     *
+     * @return User[]
+     */
+    public function findUsersByCustomer(array $customerList): array
     {
-        return $this->createQueryBuilder('c')
+        /** @var User[] $users * */
+        $users = $this->createQueryBuilder('c')
             ->leftJoin('c.users', 'u')
             ->addSelect('u')
             ->where('c in (:customerList)')
             ->setParameter('customerList', $customerList)
             ->getQuery()
             ->getResult();
+
+        return $users;
     }
 }
