@@ -143,9 +143,8 @@ class Customer
 
     public function setCreatedAt(?\DateTimeImmutable $createdAt): self
     {
-        if (null === $this->createdAt && null === $createdAt) {
-            $this->createdAt = new \DateTimeImmutable();
-        }
+
+        $this->createdAt = $createdAt;
 
         return $this;
     }

@@ -140,9 +140,6 @@ class CustomerController extends AbstractController
         }
 
         $cache->invalidateTags(['customersCache']);
-        dd($updateCustomer->getCreatedAt());
-
-        $this->entityManager->persist($updateCustomer);
         $this->entityManager->flush();
 
         return $this->json(
