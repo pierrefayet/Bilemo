@@ -45,7 +45,7 @@ class PhoneController extends AbstractController
      * @example Request: GET /api/phones?page=2&limit=5
      */
     #[Route('/phones', name: 'list_phone', requirements: ['page' => '\d+', 'limit' => '\d+'], methods: ['GET'])]
-    public function getAllPhone(Request $request, TagAwareCacheInterface $cache, PhoneRepository $phoneRepository): Response
+    public function getAllPhone(Request $request, TagAwareCacheInterface $cache, PhoneRepository $phoneRepository): JsonResponse
     {
         $page = max(filter_var(
             $request->get('page', 1),
@@ -69,7 +69,7 @@ class PhoneController extends AbstractController
         $context = SerializationContext::create()->setGroups(['phone:details']);
         $jsonContent = $this->jmsSerializer->serialize($phoneList, 'json', $context);
 
-        return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
+        return new JsonResponse($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json'], true);
     }
 
     /**
@@ -136,6 +136,10 @@ class PhoneController extends AbstractController
             return $this->json($errorsJson, Response::HTTP_BAD_REQUEST);
         }
 
+        if (!$phone instanceof Phone) {
+            return $this->json(['error' => 'Invalid data'], Response::HTTP_BAD_REQUEST);
+        }
+
         $entityManager->persist($phone);
         $entityManager->flush();
 
@@ -160,7 +164,7 @@ class PhoneController extends AbstractController
      * @param EntityManagerInterface $entityManager the entity manager for data persistence
      * @param TagAwareCacheInterface $cache         the cache service for invalidating cache tags
      *
-     * @return Response the HTTP response containing the updated Phone object in JSON format
+     * @return JsonResponse the HTTP response containing the updated Phone object in JSON format
      *
      * @throws InvalidArgumentException
      */
@@ -172,13 +176,17 @@ class PhoneController extends AbstractController
         JMSSerializerInterface $serializer,
         EntityManagerInterface $entityManager,
         TagAwareCacheInterface $cache
-    ): Response {
+    ): JsonResponse {
         $updatePhone = $serializer->deserialize(
             $request->getContent(),
             Phone::class,
             'json',
             DeserializationContext::create()->setAttribute('target', $currentPhone)
         );
+
+        if (!$updatePhone instanceof Phone) {
+            return new JsonResponse(['error' => 'Invalid data provided'], Response::HTTP_BAD_REQUEST);
+        }
 
         $entityManager->persist($updatePhone);
         $entityManager->flush();
@@ -187,7 +195,7 @@ class PhoneController extends AbstractController
         $context = SerializationContext::create()->setGroups(['phone:details']);
         $jsonContent = $this->jmsSerializer->serialize($updatePhone, 'json', $context);
 
-        return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
+        return new JsonResponse($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json'], true);
     }
 
     /**
@@ -202,6 +210,8 @@ class PhoneController extends AbstractController
      * @param EntityManagerInterface $entityManager the entity manager for interacting with the database
      *
      * @return Response an HTTP response with status 204 (No Content)
+     *
+     * @throws InvalidArgumentException
      */
     #[Route('/phones/{id}', name: 'delete_phone', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to delete a phone')]

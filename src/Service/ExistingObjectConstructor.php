@@ -16,13 +16,25 @@ class ExistingObjectConstructor implements ObjectConstructorInterface
      */
     public function __construct(string $fallbackConstructorClassName)
     {
-        $this->fallbackConstructor = new $fallbackConstructorClassName();
+        $instance = new $fallbackConstructorClassName();
+        if (!$instance instanceof ObjectConstructorInterface) {
+            throw new \InvalidArgumentException(sprintf('The class %s must implement ObjectConstructorInterface.', $fallbackConstructorClassName));
+        }
+        $this->fallbackConstructor = $instance;
     }
 
+    /**
+     * @param DeserializationVisitorInterface $visitor
+     * @param ClassMetadata $metadata
+     * @param mixed $data
+     * @param array $type
+     * @param DeserializationContext $context
+     * @return object|null
+     */
     public function construct(
         DeserializationVisitorInterface $visitor,
         ClassMetadata $metadata,
-        $data,
+        mixed $data,
         array $type,
         DeserializationContext $context
     ): ?object {

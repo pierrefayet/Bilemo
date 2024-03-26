@@ -139,6 +139,10 @@ class CustomerController extends AbstractController
     public function createCustomer(Request $request, UserRepository $userRepository, ValidatorInterface $validator): Response
     {
         $newCustomer = $this->jmsSerializer->deserialize($request->getContent(), Customer::class, 'json');
+        if (!$newCustomer instanceof Customer) {
+            return $this->json(['error' => 'Invalid data provided'], Response::HTTP_BAD_REQUEST);
+        }
+
         $errors = $validator->validate($newCustomer);
 
         if ($errors->count() > 0) {
