@@ -4,69 +4,112 @@ namespace App\Entity;
 
 use App\Repository\PhoneRepository;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use Hateoas\Configuration\Annotation as Hateoas;
 
+/**
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *          "api_detail_phone ",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="phone:details")
+ * )
+ *
+ * @Hateoas\Relation(
+ *      "update",
+ *      href = @Hateoas\Route(
+ *          "api_update_phone",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="phone:details", excludeIf = "expr(not is_granted('ROLE_ADMIN'))"),
+ * )
+ *
+ * @Hateoas\Relation(
+ *      "delete",
+ *      href = @Hateoas\Route(
+ *          "api_delete_phone",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="phone:details", excludeIf = "expr(not is_granted('ROLE_ADMIN'))"),
+ * )
+ */
 #[ORM\Entity(repositoryClass: PhoneRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Phone
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['phone:details'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
+    #[Groups(['phone:details'])]
     private ?string $model = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
+    #[Groups(['phone:details'])]
     private ?string $manufacturer = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
+    #[Groups(['phone:details'])]
     private ?string $processor = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
+    #[Groups(['phone:details'])]
     private ?string $ram = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
+    #[Groups(['phone:details'])]
     private ?string $storageCapacity = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
+    #[Groups(['phone:details'])]
     private ?string $cameraDetails = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
+    #[Groups(['phone:details'])]
     private ?string $batteryLife = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
+    #[Groups(['phone:details'])]
     private ?string $screenSize = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank]
     #[Assert\Length(max: 255)]
     #[Assert\Regex("/^\d+(?:\.\d{1,2})?$/")]
+    #[Groups(['phone:details'])]
     private ?string $price = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Length(max: 255)]
     #[Assert\Regex("/^\d*$/", message: 'Stock quantity must be an integer.')]
+    #[Groups(['phone:details'])]
     private ?string $stockQuantity = null;
 
     #[ORM\Column]
     #[Assert\Type("\DateTimeImmutable")]
+    #[Groups(['phone:details'])]
     private ?\DateTimeImmutable $releaseDate = null;
 
     public function __construct()
@@ -209,5 +252,11 @@ class Phone
         $this->releaseDate = $releaseDate;
 
         return $this;
+    }
+
+    #[ORM\PrePersist]
+    public function prePersist(): void
+    {
+        $this->releaseDate = new \DateTimeImmutable();
     }
 }

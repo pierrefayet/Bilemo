@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,12 +24,50 @@ class CustomerController extends AbstractController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly SerializerInterface $serializer
+        private readonly SerializerInterface $jmsSerializer
     ) {
     }
 
     /**
-     * This code allows you to retrieve all customers.
+     * Retrieves and returns the details of a specific customer.
+     *
+     * This method uses the customer identifier provided in the URL to retrieve
+     * detailed information about this specific client. Customer data is
+     * serialized in JSON format, using serialization groups to control
+     * attributes included in the response.
+     *
+     * @param Customer $customer the Customer entity automatically resolved by Symfony
+     *                           from the identifier in the URL
+     *
+     * @return Response the HTTP response containing customer details in JSON format
+     *
+     * @example Request: GET /api/customers/1
+     */
+    #[Route('/customers/{id}', name: 'detail_customer', methods: ['GET'])]
+    public function getDetailCustomer(Customer $customer): Response
+    {
+        $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
+        $jsonContent = $this->jmsSerializer->serialize($customer, 'json', $context);
+
+        return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
+    }
+
+    /**
+     * Retrieves the list of all customers with pagination.
+     *
+     * This method returns a paginated list of customers. It supports pagination via the
+     * page' and 'limit' parameters in the request. The results are cached to
+     * improve performance.
+     *
+     * @param Request                $request            the HTTP request containing pagination parameters
+     * @param TagAwareCacheInterface $cache              the cache service
+     * @param CustomerRepository     $customerRepository the repository for accessing customer data
+     *
+     * @return Response the list of customers in JSON format
+     *
+     * @throws InvalidArgumentException
+     *
+     * @example Request: GET /customers?page=2&limit=5
      */
     #[Route('/customers', name: 'list_customer', methods: ['GET'])]
     public function getAllCustomer(
@@ -56,31 +95,50 @@ class CustomerController extends AbstractController
         });
 
         $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
-        $jsonContent = $this->serializer->serialize($customerList, 'json', $context);
+        $jsonContent = $this->jmsSerializer->serialize($customerList, 'json', $context);
 
         return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
     /**
-     * This code allows you to retrieve a customer.
-     */
-    #[Route('/customers/{id}', name: 'detail_customer', methods: ['GET'])]
-    public function getDetailCustomer(Customer $customer): Response
-    {
-        $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
-        $jsonContent = $this->serializer->serialize($customer, 'json', $context);
-
-        return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
-    }
-
-    /**
+     * Creates a new client and associates it with an existing user.
+     *
+     * This method waits for the customer data in JSON format in the request body.
+     * It deserializes this data into a Customer entity, validates it, and if no validation
+     *  error is found, associates the customer with a user specified by `userId` in the request body.
+     * in the query body before persisting the customer in the database.
+     *
+     * @param Request            $request        the HTTP request containing the client data
+     * @param UserRepository     $userRepository the repository for retrieving User entities
+     * @param ValidatorInterface $validator      the validation service for checking client data
+     *
+     * @return Response the HTTP response, with the client created in JSON format if creation is successful,
+     *                  or with validation error messages if applicable
+     *
+     * @example Request body for creation :
+     * {
+     * "firstName": "Jean",
+     * lastName": "Dupont",
+     * "email": "jean.dupont@example.com",
+     * "userId": 31
+     * }
+     * //
+     * #[Route('/customers/{id}', name: 'detail_customer', methods: ['GET'])]
+     * public function getDetailCustomer(Customer $customer): Response
+     * {
+     * $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
+     * $jsonContent = $this->jmsSerializer->serialize($customer, 'json', $context);
+     *
+     * return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
+     * }
+     * /**
      * This code allows you to create a customer.
      */
     #[Route('/customers', name: 'create_customer', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to create a customer')]
     public function createCustomer(Request $request, UserRepository $userRepository, ValidatorInterface $validator): Response
     {
-        $newCustomer = $this->serializer->deserialize($request->getContent(), Customer::class, 'json');
+        $newCustomer = $this->jmsSerializer->deserialize($request->getContent(), Customer::class, 'json');
         $errors = $validator->validate($newCustomer);
 
         if ($errors->count() > 0) {
@@ -104,13 +162,38 @@ class CustomerController extends AbstractController
         $newCustomer->addUser($user);
 
         $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
-        $jsonContent = $this->serializer->serialize($newCustomer, 'json', $context);
+        $jsonContent = $this->jmsSerializer->serialize($newCustomer, 'json', $context);
 
         return new Response($jsonContent, Response::HTTP_CREATED, ['Content-Type' => 'application/json']);
     }
 
     /**
-     * This code allows you to create a customer.
+     * Updates an existing customer with the information provided in the request.
+     *
+     * This method updates the details of a specific customer identified by its ID in the URL.
+     * It deserializes the request body into a Customer entity and associates a User specified by userId.
+     * If the specified user does not exist, an error is returned.
+     * Cache tags associated with customers are invalidated after the update.
+     *
+     * @param Customer               $currentCustomer the Customer entity automatically resolved by Symfony from the ID in the URL
+     * @param Request                $request         the HTTP request containing the update data in JSON format
+     * @param UserRepository         $userRepository  the repository for accessing User entities
+     * @param TagAwareCacheInterface $cache           the cache service for invalidating cache tags
+     *
+     * @return Response an HTTP response with status 204 (No Content) if successful, or 400 (Bad Request) if the user is not found
+     *
+     * @throws InvalidArgumentException
+     *
+     * @example Request body for the update:
+     * {
+     * "firstName": "Pierre",
+     * lastName": "Fayet",
+     * "email": "tgilles@traore.fr",
+     * "userId": 31
+     * }
+     * @example Possible answers:
+     * - HTTP 204 No Content: The update was successful.
+     * - HTTP 400 Bad Request: If the user ID specified in `userId` is not found.
      */
     #[Route('/customers/{id}', name: 'update_customer', methods: ['PUT'])]
     #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to update a customer')]
@@ -120,7 +203,7 @@ class CustomerController extends AbstractController
         UserRepository $userRepository,
         TagAwareCacheInterface $cache
     ): Response {
-        $updateCustomer = $this->serializer->deserialize(
+        $updateCustomer = $this->jmsSerializer->deserialize(
             $request->getContent(),
             Customer::class,
             'json',
@@ -142,14 +225,27 @@ class CustomerController extends AbstractController
         $cache->invalidateTags(['customersCache']);
         $this->entityManager->flush();
 
-        $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
-        $jsonContent = $this->serializer->serialize($updateCustomer, 'json', $context);
-
-        return new Response($jsonContent, Response::HTTP_CREATED, ['Content-Type' => 'application/json']);
+        return new Response(null, Response::HTTP_NO_CONTENT);
     }
 
     /**
-     * This code allows you to delete a customer.
+     * Deletes a customer specified by its ID.
+     *
+     * This method deletes an existing customer from the database.
+     * The client ID is provided in the request URL. Once the client has been deleted, the method returns an
+     * HTTP response with status 204 to indicate that the action has been performed successfully.
+     * If the ID provided in the URL doesn't correspond to any client, Symfony will generate
+     * automatically generate a 404 response thanks to the param converter mechanism.
+     *
+     * @param Customer $customer the Customer entity automatically resolved by Symfony from the ID in the URL
+     *
+     * @return Response an HTTP response with status 204 (No Content) to indicate successful deletion
+     *
+     * @example Request URL for deletion:
+     * DELETE /api/customers/{id}
+     * @example Possible responses:
+     * - HTTP 204 No Content: Deletion was successful.
+     * - HTTP 404 Not Found: No client matching the provided ID was found.
      */
     #[Route('/customers/{id}', name: 'delete_customer', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to delete a customer')]
