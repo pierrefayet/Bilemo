@@ -9,6 +9,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use Nelmio\ApiDocBundle\Annotation\Security;
+use OpenApi\Annotations as OA;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,19 +32,30 @@ class CustomerController extends AbstractController
     }
 
     /**
-     * Retrieves and returns the details of a specific customer.
+     * Retrieves customer details.
      *
-     * This method uses the customer identifier provided in the URL to retrieve
-     * detailed information about this specific client. Customer data is
-     * serialized in JSON format, using serialization groups to control
-     * attributes included in the response.
+     * @OA\Response(
+     *     response=200,
+     *     description="Returns the details of a customer",
      *
-     * @param Customer $customer the Customer entity automatically resolved by Symfony
-     *                           from the identifier in the URL
+     *     @OA\JsonContent(
+     *         type="object",
      *
-     * @return Response the HTTP response containing customer details in JSON format
+     *         @OA\Property(property="data", type="array", @OA\Items(ref=@Model(type=Customer::class, groups={"getDetailCustomer"})))
+     *     )
+     * )
      *
-     * @example Request: GET /api/customers/1
+     * @OA\Parameter(
+     *     name="id",
+     *     in="path",
+     *     description="The ID of the customer to retrieve",
+     *
+     *     @OA\Schema(type="integer")
+     * )
+     *
+     * @OA\Tag(name="Customer")
+     *
+     * @Security(name="Bearer")
      */
     #[Route('/customers/{id}', name: 'detail_customer', methods: ['GET'])]
     public function getDetailCustomer(Customer $customer): Response
@@ -53,21 +67,42 @@ class CustomerController extends AbstractController
     }
 
     /**
-     * Retrieves the list of all customers with pagination.
+     * This method retrieves all customers.
      *
-     * This method returns a paginated list of customers. It supports pagination via the
-     * page' and 'limit' parameters in the request. The results are cached to
-     * improve performance.
+     * @OA\Response(
+     *     response=200,
+     *     description="Return to customer list",
      *
-     * @param Request                $request            the HTTP request containing pagination parameters
-     * @param TagAwareCacheInterface $cache              the cache service
-     * @param CustomerRepository     $customerRepository the repository for accessing customer data
+     *     @OA\JsonContent(
+     *        type="array",
      *
-     * @return Response the list of customers in JSON format
+     *        @OA\Items(ref=@Model(type=Customer::class, groups={'customer:details', 'user:details'}))
+     *     )
+     * )
      *
+     * @OA\Parameter(
+     *     name="page",
+     *     in="query",
+     *     description="The page you want to retrieve",
+     *
+     *     @OA\Schema(type="int")
+     * )
+     *
+     * @OA\Parameter(
+     *     name="limit",
+     *     in="query",
+     *     description="The number of elements to be retrieved",
+     *
+     *     @OA\Schema(type="int")
+     * )
+     *
+     * @OA\Tag(name="Customer")
+     *
+     * @param Request $request
+     * @param TagAwareCacheInterface $cache
+     * @param CustomerRepository $customerRepository
+     * @return Response
      * @throws InvalidArgumentException
-     *
-     * @example Request: GET /customers?page=2&limit=5
      */
     #[Route('/customers', name: 'list_customer', methods: ['GET'])]
     public function getAllCustomer(

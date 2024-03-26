@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface as JMSSerializerInterface;
+use OpenApi\Annotations as OA;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -33,6 +34,38 @@ class PhoneController extends AbstractController
      * page' and 'limit' parameters in the request. The results are cached to
      * improve performance. Caching is based on the pagination parameters,
      * ensuring that different pages are cached separately.
+     *
+     * /**
+     *  This method retrieves all books.
+     *
+     * @OA\Response(
+     *      response=200,
+     *      description="Return to books list",
+     *
+     *      @OA\JsonContent(
+     *         type="array",
+     *
+     *          @OA\Items(ref=@Model(type=Phone::class, groups={"phone:details"}))
+     *      )
+     *  )
+     *
+     *@OA\Parameter(
+     *      name="page",
+     *      in="query",
+     *      description="The page you want to retrieve",
+     *
+     *      @OA\Schema(type="int")
+     *  )
+     *
+     *@OA\Parameter(
+     *      name="limit",
+     *      in="query",
+     *      description="The number of elements to be retrieved",
+     *
+     *      @OA\Schema(type="int")
+     *  )
+     *
+     *@OA\Tag(name="Phones")
      *
      * @param Request                $request         the HTTP request containing pagination parameters
      * @param TagAwareCacheInterface $cache           the cache service
