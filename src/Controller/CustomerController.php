@@ -126,8 +126,6 @@ class CustomerController extends AbstractController
         ]
     )]
     /**
-     * Retrieves the list of customers with pagination.
-     *
      * This method returns a paginated list of the customers. It supports pagination via the
      * page' and 'limit' parameters in the request. The results are cached to
      * improve performance.
@@ -171,7 +169,7 @@ class CustomerController extends AbstractController
 
     #[OA\Response(
         response: 204,
-        description: 'Returns the client list of the requested page.',
+        description: 'Creates a new client and associates it with an existing user.',
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: ['customer:details', 'user:details']))
@@ -203,8 +201,6 @@ class CustomerController extends AbstractController
     )]
     #[OA\Tag(name: 'Customers')]
     /**
-     * Creates a new client and associates it with an existing user.
-     *
      * This method waits for the customer data in JSON format in the request body.
      * It deserializes this data into a Customer entity, validates it, and if no validation
      *  error is found, associates the customer with a user specified by `userId` in the request body.
@@ -275,7 +271,7 @@ class CustomerController extends AbstractController
 
     #[OA\Response(
         response: 200,
-        description: 'Returns the client list of the requested page.',
+        description: 'Updates an existing customer with the information provided in the request.',
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: ['customer:details', 'user:details']))
@@ -307,8 +303,6 @@ class CustomerController extends AbstractController
     )]
     #[OA\Tag(name: 'Customers')]
     /**
-     * Updates an existing customer with the information provided in the request.
-     *
      * This method updates the details of a specific customer identified by its ID in the URL.
      * It deserializes the request body into a Customer entity and associates a User specified by userId.
      * If the specified user does not exist, an error is returned.
@@ -372,7 +366,8 @@ class CustomerController extends AbstractController
 
     #[OA\Response(
         response: 204,
-        description: 'Returns the client list of the requested page.',
+        description: 'Deletes a customer specified by its ID.
+     *',
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: ['customer:details', 'user:details']))
@@ -404,8 +399,6 @@ class CustomerController extends AbstractController
     )]
     #[OA\Tag(name: 'Customers')]
     /**
-     * Deletes a customer specified by its ID.
-     *
      * This method deletes an existing customer from the database.
      * The client ID is provided in the request URL. Once the client has been deleted, the method returns an
      * HTTP response with status 204 to indicate that the action has been performed successfully.

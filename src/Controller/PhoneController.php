@@ -110,7 +110,7 @@ class PhoneController extends AbstractController
 
     #[OA\Response(
         response: 200,
-        description: 'Returns the phones list of the requested page.',
+        description: 'Returns the phone of the requested page.',
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
@@ -142,14 +142,14 @@ class PhoneController extends AbstractController
     )]
     #[OA\Tag(name: 'Phones')]
     /**
-     * Récupère les détails d'un téléphone par son ID.
+     * Retrieves phone details by ID.
      *
-     * Utilise l'ID dans l'URL pour chercher et retourner les détails d'un téléphone spécifique.
-     * Les données sont filtrées par le groupe de sérialisation 'phone:details'.
+     * Uses the ID in the URL to search for and return the details of a specific phone.
+     * Data is filtered by the 'phone:details' serialization group.
      *
-     * @param Phone $phone L'entité Phone résolue par Symfony grâce à l'ID dans l'URL
+     * @param Phone $phone the Phone entity resolved by Symfony using the ID in the URL
      *
-     * @return Response les détails du téléphone en JSON (HTTP 200)
+     * @return Response phone details in JSON (HTTP 200)
      */
     #[Route('/phones/{id}', name: 'detail_phone', methods: ['GET'])]
     public function getDetailPhone(Phone $phone): Response
@@ -162,7 +162,7 @@ class PhoneController extends AbstractController
 
     #[OA\Response(
         response: 204,
-        description: 'Returns the phones list of the requested page.',
+        description: 'Create a new phone.',
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
@@ -194,8 +194,6 @@ class PhoneController extends AbstractController
     )]
     #[OA\Tag(name: 'Phones')]
     /**
-     * Create a new phone.
-     *
      * Validates and persists phone data provided in JSON. Returns the created phone or
      * validation errors.
      *
@@ -205,7 +203,7 @@ class PhoneController extends AbstractController
      *
      * @example JSON for creation :
      * {
-     * "model": "Model hcbyefsqefsefd",
+     * "model": "Model iphone16",
      * "manufacturer": "Apple",
      * "processor": "Exynos 2100",
      * "ram": "8 GB",
@@ -253,7 +251,7 @@ class PhoneController extends AbstractController
 
     #[OA\Response(
         response: 204,
-        description: 'Returns the phones list of the requested page.',
+        description: 'Updates the details of a specific phone.',
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
@@ -285,8 +283,6 @@ class PhoneController extends AbstractController
     )]
     #[OA\Tag(name: 'Phones')]
     /**
-     * Updates the details of a specific phone.
-     *
      * This method expects data in JSON format in the body of the PUT request.
      * It deserializes this data to update an existing Phone object,
      * validates the updated object, and persists it in the database. The
@@ -333,7 +329,7 @@ class PhoneController extends AbstractController
 
     #[OA\Response(
         response: 204,
-        description: 'Returns the phones list of the requested page.',
+        description: 'Deletes a phone specified by its ID.',
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
@@ -365,8 +361,6 @@ class PhoneController extends AbstractController
     )]
     #[OA\Tag(name: 'Phones')]
     /**
-     * Deletes a phone specified by its ID.
-     *
      * This method uses the phone ID provided in the URL to search for the phone and delete it from the database.
      * and delete it from the database. An HTTP response with status 204 (No Content)
      * is returned to indicate that the action has been performed successfully. Access to this
