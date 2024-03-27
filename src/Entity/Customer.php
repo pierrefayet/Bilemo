@@ -8,6 +8,9 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Hateoas\Configuration\Annotation as Hateoas;
 use JMS\Serializer\Annotation\Groups;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -18,6 +21,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          parameters = { "id" = "expr(object.getId())" }
  *      ),
  *      exclusion = @Hateoas\Exclusion(groups="customer:details")
+ * )
+ * @Hateoas\Relation(
+ *       "list",
+ *       href = @Hateoas\Route(
+ *       "api_list_customer"
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="customer:details"),
  * )
  * @Hateoas\Relation(
  *      "update",
@@ -38,7 +48,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
 #[ORM\HasLifecycleCallbacks]
-class Customer
+class Customer implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -51,16 +61,7 @@ class Customer
         minMessage: 'The first name must be at least {{ limit }} characters',
         maxMessage: 'The first name must be no more than {{ limit }} characters')]
     #[Groups(['customer:details'])]
-    private ?string $firstName = null;
-
-    #[ORM\Column(length: 255)]
-    #[Assert\Length(
-        min: 3,
-        max: 255,
-        minMessage: 'The last name must be at least {{ limit }} characters',
-        maxMessage: 'The last name must be no more than {{ limit }} characters')]
-    #[Groups(['customer:details'])]
-    private ?string $lastName = null;
+    private ?string $name = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\Email(
@@ -79,6 +80,14 @@ class Customer
     #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'customers')]
     #[Groups(['customer:details'])]
     private Collection $users;
+
+    #[ORM\Column(length: 255)]
+    private ?string $password = null;
+
+    /** @var array<string> */
+    #[ORM\Column]
+    #[Ignore]
+    private array $roles = [];
 
     public function __construct()
     {
@@ -126,33 +135,19 @@ class Customer
         return $this;
     }
 
-    public function getFirstName(): ?string
-    {
-        return $this->firstName;
-    }
-
-    public function setFirstName(string $firstName): static
-    {
-        $this->firstName = $firstName;
-
-        return $this;
-    }
-
-    public function getLastName(): ?string
-    {
-        return $this->lastName;
-    }
-
-    public function setLastName(string $lastName): static
-    {
-        $this->lastName = $lastName;
-
-        return $this;
-    }
-
     public function getEmail(): ?string
     {
         return $this->email;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(?string $name): void
+    {
+        $this->name = $name;
     }
 
     public function setEmail(string $email): static
@@ -172,6 +167,64 @@ class Customer
         $this->createdAt = $createdAt;
 
         return $this;
+    }
+
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(?string $password): void
+    {
+        $this->password = $password;
+    }
+
+    /**
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
+     */
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     * Method getUsername returns the field used for authentication.
+     */
+    public function getUsername(): string
+    {
+        return $this->getUserIdentifier();
+    }
+
+    /**
+     * @see UserInterface
+     *
+     * @return list<string>
+     */
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        $roles[] = 'ROLE_CUSTOMER';
+
+        return array_unique($roles);
+    }
+
+    /**
+     * @param list<string> $roles
+     */
+    public function setRoles(array $roles): static
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function eraseCredentials(): void
+    {
     }
 
     #[ORM\PrePersist]

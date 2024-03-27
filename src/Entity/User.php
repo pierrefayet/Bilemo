@@ -13,8 +13,7 @@ use Symfony\Component\Serializer\Annotation\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+class User
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -45,26 +44,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $lastName = null;
 
     /**
-     * @var list<string> The user roles
-     */
-    #[ORM\Column]
-    #[Ignore]
-    private array $roles = [];
-
-    /**
-     * @var string|null The hashed password
-     */
-    #[ORM\Column]
-    #[Assert\NotBlank(message: 'Le mot de passe ne doit pas être vide.')]
-    #[Assert\Length(
-        min: 6,
-        max: 4096,
-        minMessage: 'Le mot de passe doit contenir au moins {{ limit }} caractères.',
-    )]
-    #[Ignore]
-    private ?string $password = null;
-
-    /**
      * @var Collection<int, Customer> $customers
      */
     #[ORM\ManyToMany(targetEntity: Customer::class, inversedBy: 'users')]
@@ -93,59 +72,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
-    public function getUserIdentifier(): string
-    {
-        return (string) $this->email;
-    }
-
-    /**
-     * Method getUsername returns the field used for authentication.
-     */
-    public function getUsername(): string
-    {
-        return $this->getUserIdentifier();
-    }
-
-    /**
-     * @see UserInterface
-     *
-     * @return list<string>
-     */
-    public function getRoles(): array
-    {
-        $roles = $this->roles;
-        $roles[] = 'ROLE_USER';
-
-        return array_unique($roles);
-    }
-
-    /**
-     * @param list<string> $roles
-     */
-    public function setRoles(array $roles): static
-    {
-        $this->roles = $roles;
-
-        return $this;
-    }
-
-    public function getPassword(): ?string
-    {
-        return $this->password;
-    }
-
-    public function setPassword(string $password): static
-    {
-        $this->password = $password;
-
-        return $this;
-    }
-
     public function getFirstName(): ?string
     {
         return $this->firstName;
@@ -164,13 +90,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setLastName(?string $lastName): void
     {
         $this->lastName = $lastName;
-    }
-
-    /**
-     * @see UserInterface
-     */
-    public function eraseCredentials(): void
-    {
     }
 
     /**

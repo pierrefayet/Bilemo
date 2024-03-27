@@ -18,6 +18,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      exclusion = @Hateoas\Exclusion(groups="phone:details")
  * )
  * @Hateoas\Relation(
+ *        "list",
+ *        href = @Hateoas\Route(
+ *        "api_list_phone"
+ *       ),
+ *       exclusion = @Hateoas\Exclusion(groups="phone:details"),
+ *  )
+ * @Hateoas\Relation(
  *      "update",
  *      href = @Hateoas\Route(
  *          "api_update_phone",

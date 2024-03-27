@@ -16,6 +16,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -223,9 +224,17 @@ class CustomerController extends AbstractController
      */
     #[Route('/customers', name: 'create_customer', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to create a customer')]
-    public function createCustomer(Request $request, UserRepository $userRepository, ValidatorInterface $validator): Response
-    {
+    public function createCustomer(
+        Customer $customer,
+        Request $request,
+        UserRepository $userRepository,
+        ValidatorInterface $validator,
+        UserPasswordHasherInterface $passwordHashed
+    ): Response {
+        $password = $passwordHashed->hashPassword($customer, 'password');
+        $customer->setPassword($password);
         $newCustomer = $this->jmsSerializer->deserialize($request->getContent(), Customer::class, 'json');
+
         if (!$newCustomer instanceof Customer) {
             return $this->json(['error' => 'Invalid data provided'], Response::HTTP_BAD_REQUEST);
         }

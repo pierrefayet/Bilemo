@@ -28,31 +28,30 @@ class AppFixture extends Fixture
         for ($i = 0; $i < 10; ++$i) {
             $user = new User();
             $user->setEmail($this->faker->unique()->email);
-            $password = $this->passwordHashed->hashPassword($user, 'password');
-            $user->setPassword($password);
             $user->setLastName($this->faker->unique()->lastName);
             $user->setFirstName($this->faker->unique()->firstName);
-            $user->setRoles(['ROLE_USER']);
             $manager->persist($user);
             $users[] = $user;
         }
 
-        $admin = new User();
+        $admin = new Customer();
         $admin->setEmail('admin@bilemo.com');
         $password = $this->passwordHashed->hashPassword($admin, 'password');
         $admin->setPassword($password);
-        $admin->setLastName($this->faker->unique()->lastName);
-        $admin->setFirstName($this->faker->unique()->firstName);
+        $admin->setName($this->faker->unique()->name);
+        $admin->setCreatedAt(new \DateTimeImmutable());
         $admin->setRoles(['ROLE_ADMIN']);
         $manager->persist($admin);
 
         $customers = [];
-        for ($i = 0; $i < 10; ++$i) {
+        for ($i = 0; $i < 5; ++$i) {
             $customer = new Customer();
             $customer->setEmail($this->faker->unique()->email);
-            $customer->setLastName($this->faker->unique()->lastName);
-            $customer->setFirstName($this->faker->unique()->firstName);
+            $customer->setName($this->faker->unique()->name);
             $customer->setCreatedAt(new \DateTimeImmutable());
+            $password = $this->passwordHashed->hashPassword($customer, 'password');
+            $customer->setPassword($password);
+            $customer->setRoles(['ROLE_CUSTOMER']);
             shuffle($users);
             for ($j = 0; $j < 5; ++$j) {
                 $user = $users[$j];

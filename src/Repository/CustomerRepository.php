@@ -6,6 +6,9 @@ use App\Entity\Customer;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 
 /**
  * @extends ServiceEntityRepository<Customer>
@@ -15,11 +18,25 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Customer[]    findAll()
  * @method Customer[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class CustomerRepository extends ServiceEntityRepository
+class CustomerRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Customer::class);
+    }
+
+    /**
+     * Used to upgrade (rehash) the user's password automatically over time.
+     */
+    public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
+    {
+        if (!$user instanceof Customer) {
+            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', get_class($user)));
+        }
+
+        $user->setPassword($newHashedPassword);
+        $this->getEntityManager()->persist($user);
+        $this->getEntityManager()->flush();
     }
 
     /**
@@ -29,7 +46,7 @@ class CustomerRepository extends ServiceEntityRepository
      */
     public function findAllCustomersWithPagination(int $page, int $limit): array
     {
-        /** @var Customer[] $customers * */
+        /** @var Customer[] $customers */
         $customers = $this->createQueryBuilder('c')
             ->setFirstResult(($page - 1) * $limit)
             ->setMaxResults($limit)
