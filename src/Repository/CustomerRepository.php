@@ -40,8 +40,8 @@ class CustomerRepository extends ServiceEntityRepository
     }
 
     /**
-     *
      * Returns a list of User associated with the Customer.
+     *
      * @param array<int|Customer> $customerList
      *
      * @return User[]

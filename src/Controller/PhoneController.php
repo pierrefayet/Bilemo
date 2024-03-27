@@ -2,13 +2,15 @@
 
 namespace App\Controller;
 
+use App\Entity\Customer;
 use App\Entity\Phone;
 use App\Repository\PhoneRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface as JMSSerializerInterface;
-use OpenApi\Annotations as OA;
+use Nelmio\ApiDocBundle\Annotation\Model;
+use OpenApi\Attributes as OA;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -27,6 +29,39 @@ class PhoneController extends AbstractController
     {
     }
 
+    #[OA\Response(
+        response: 200,
+        description: 'Returns the phones list of the requested page.',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
+        )
+    )]
+    #[OA\Response(
+        response: 404,
+        description: 'NOT FOUND',
+    )
+    ]
+    #[OA\Response(
+        response: 401,
+        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
+    )
+    ]
+    #[OA\Parameter(
+        name: 'page',
+        description: 'Requested result page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 1),
+        example: '1'
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        description: 'Number of results per page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 10),
+        example: '10'
+    )]
+    #[OA\Tag(name: 'Phones')]
     /**
      * Retrieves the list of all phones with pagination.
      *
@@ -34,38 +69,6 @@ class PhoneController extends AbstractController
      * page' and 'limit' parameters in the request. The results are cached to
      * improve performance. Caching is based on the pagination parameters,
      * ensuring that different pages are cached separately.
-     *
-     * /**
-     *  This method retrieves all books.
-     *
-     * @OA\Response(
-     *      response=200,
-     *      description="Return to books list",
-     *
-     *      @OA\JsonContent(
-     *         type="array",
-     *
-     *          @OA\Items(ref=@Model(type=Phone::class, groups={"phone:details"}))
-     *      )
-     *  )
-     *
-     *@OA\Parameter(
-     *      name="page",
-     *      in="query",
-     *      description="The page you want to retrieve",
-     *
-     *      @OA\Schema(type="int")
-     *  )
-     *
-     *@OA\Parameter(
-     *      name="limit",
-     *      in="query",
-     *      description="The number of elements to be retrieved",
-     *
-     *      @OA\Schema(type="int")
-     *  )
-     *
-     *@OA\Tag(name="Phones")
      *
      * @param Request                $request         the HTTP request containing pagination parameters
      * @param TagAwareCacheInterface $cache           the cache service
@@ -105,6 +108,39 @@ class PhoneController extends AbstractController
         return new JsonResponse($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json'], true);
     }
 
+    #[OA\Response(
+        response: 200,
+        description: 'Returns the phones list of the requested page.',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
+        )
+    )]
+    #[OA\Response(
+        response: 404,
+        description: 'NOT FOUND',
+    )
+    ]
+    #[OA\Response(
+        response: 401,
+        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
+    )
+    ]
+    #[OA\Parameter(
+        name: 'page',
+        description: 'Requested result page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 1),
+        example: '1'
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        description: 'Number of results per page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 10),
+        example: '10'
+    )]
+    #[OA\Tag(name: 'Phones')]
     /**
      * Récupère les détails d'un téléphone par son ID.
      *
@@ -124,6 +160,39 @@ class PhoneController extends AbstractController
         return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
+    #[OA\Response(
+        response: 204,
+        description: 'Returns the phones list of the requested page.',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
+        )
+    )]
+    #[OA\Response(
+        response: 404,
+        description: 'NOT FOUND',
+    )
+    ]
+    #[OA\Response(
+        response: 401,
+        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
+    )
+    ]
+    #[OA\Parameter(
+        name: 'page',
+        description: 'Requested result page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 1),
+        example: '1'
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        description: 'Number of results per page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 10),
+        example: '10'
+    )]
+    #[OA\Tag(name: 'Phones')]
     /**
      * Create a new phone.
      *
@@ -182,6 +251,39 @@ class PhoneController extends AbstractController
         return new JsonResponse($phoneJson, Response::HTTP_CREATED, ['Content-Type' => 'application/json'], true);
     }
 
+    #[OA\Response(
+        response: 204,
+        description: 'Returns the phones list of the requested page.',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
+        )
+    )]
+    #[OA\Response(
+        response: 404,
+        description: 'NOT FOUND',
+    )
+    ]
+    #[OA\Response(
+        response: 401,
+        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
+    )
+    ]
+    #[OA\Parameter(
+        name: 'page',
+        description: 'Requested result page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 1),
+        example: '1'
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        description: 'Number of results per page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 10),
+        example: '10'
+    )]
+    #[OA\Tag(name: 'Phones')]
     /**
      * Updates the details of a specific phone.
      *
@@ -193,7 +295,6 @@ class PhoneController extends AbstractController
      *
      * @param Phone                  $currentPhone  the Phone object (automatically resolved by Symfony) to be updated
      * @param Request                $request       the HTTP request containing the update data in JSON format
-     * @param JMSSerializerInterface $serializer    the JMS Serializer service for serialization/deserialization
      * @param EntityManagerInterface $entityManager the entity manager for data persistence
      * @param TagAwareCacheInterface $cache         the cache service for invalidating cache tags
      *
@@ -206,11 +307,10 @@ class PhoneController extends AbstractController
     public function updatePhone(
         Phone $currentPhone,
         Request $request,
-        JMSSerializerInterface $serializer,
         EntityManagerInterface $entityManager,
         TagAwareCacheInterface $cache
     ): JsonResponse {
-        $updatePhone = $serializer->deserialize(
+        $updatePhone = $this->jmsSerializer->deserialize(
             $request->getContent(),
             Phone::class,
             'json',
@@ -231,6 +331,39 @@ class PhoneController extends AbstractController
         return new JsonResponse($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json'], true);
     }
 
+    #[OA\Response(
+        response: 204,
+        description: 'Returns the phones list of the requested page.',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
+        )
+    )]
+    #[OA\Response(
+        response: 404,
+        description: 'NOT FOUND',
+    )
+    ]
+    #[OA\Response(
+        response: 401,
+        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
+    )
+    ]
+    #[OA\Parameter(
+        name: 'page',
+        description: 'Requested result page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 1),
+        example: '1'
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        description: 'Number of results per page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 10),
+        example: '10'
+    )]
+    #[OA\Tag(name: 'Phones')]
     /**
      * Deletes a phone specified by its ID.
      *

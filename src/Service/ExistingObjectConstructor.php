@@ -24,12 +24,7 @@ class ExistingObjectConstructor implements ObjectConstructorInterface
     }
 
     /**
-     * @param DeserializationVisitorInterface $visitor
-     * @param ClassMetadata $metadata
-     * @param mixed $data
-     * @param array $type
-     * @param DeserializationContext $context
-     * @return object|null
+     * @param array< mixed > $type
      */
     public function construct(
         DeserializationVisitorInterface $visitor,
@@ -38,7 +33,7 @@ class ExistingObjectConstructor implements ObjectConstructorInterface
         array $type,
         DeserializationContext $context
     ): ?object {
-        if ($context->hasAttribute('target') && 1 === $context->getDepth()) {
+        if ($context->hasAttribute('target') && 1 === $context->getDepth() && is_object($context->getAttribute('target'))) {
             return $context->getAttribute('target');
         }
 

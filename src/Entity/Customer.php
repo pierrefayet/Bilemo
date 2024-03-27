@@ -19,7 +19,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      ),
  *      exclusion = @Hateoas\Exclusion(groups="customer:details")
  * )
- *
  * @Hateoas\Relation(
  *      "update",
  *      href = @Hateoas\Route(
@@ -28,7 +27,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      ),
  *      exclusion = @Hateoas\Exclusion(groups="customer:details", excludeIf = "expr(not is_granted('ROLE_ADMIN'))"),
  * )
- *
  * @Hateoas\Relation(
  *      "delete",
  *      href = @Hateoas\Route(

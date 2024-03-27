@@ -10,10 +10,10 @@ use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
-use Nelmio\ApiDocBundle\Annotation\Security;
-use OpenApi\Annotations as OA;
+use OpenApi\Attributes as OA;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -31,31 +31,49 @@ class CustomerController extends AbstractController
     ) {
     }
 
+    #[OA\Response(
+        response: 200,
+        description: 'Returns the customer detail of the requested page.',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['customer:details', 'user:details']))
+        )
+    )]
+    #[OA\Response(
+        response: 404,
+        description: 'NOT FOUND',
+    )
+    ]
+    #[OA\Response(
+        response: 401,
+        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
+    )
+    ]
+    #[OA\Parameter(
+        name: 'page',
+        description: 'Requested result page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 1),
+        example: '1'
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        description: 'Number of results per page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 10),
+        example: '10'
+    )]
+    #[OA\Tag(name: 'Customers')]
     /**
-     * Retrieves customer details.
+     * Retrieves the customer with pagination.
      *
-     * @OA\Response(
-     *     response=200,
-     *     description="Returns the details of a customer",
+     * This method returns a paginated  of the customer. It supports pagination via the
+     * page' and 'limit' parameters in the request. The results are cached to
+     * improve performance.
      *
-     *     @OA\JsonContent(
-     *         type="object",
+     * @return Response the customer in JSON format
      *
-     *         @OA\Property(property="data", type="array", @OA\Items(ref=@Model(type=Customer::class, groups={"getDetailCustomer"})))
-     *     )
-     * )
-     *
-     * @OA\Parameter(
-     *     name="id",
-     *     in="path",
-     *     description="The ID of the customer to retrieve",
-     *
-     *     @OA\Schema(type="integer")
-     * )
-     *
-     * @OA\Tag(name="Customer")
-     *
-     * @Security(name="Bearer")
+     * @example Request: GET /customers?page=2&limit=5
      */
     #[Route('/customers/{id}', name: 'detail_customer', methods: ['GET'])]
     public function getDetailCustomer(Customer $customer): Response
@@ -66,43 +84,59 @@ class CustomerController extends AbstractController
         return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
+    #[OA\Get(
+        path: '/api/customers',
+        description: 'Fetches a paginated list of customers, allowing consumers to browse through the customer data stored in the system. Pagination parameters "page" and "limit" can be used to navigate through the customer list.',
+        summary: 'Retrieves a list of customers with pagination',
+        security: [['bearerAuth' => []]],
+        tags: ['Customers'],
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                description: 'The page number to fetch.',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'limit',
+                description: 'The number of items to fetch per page.',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'A paginated list of customers.',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(ref: new Model(type: Customer::class, groups: ['customer:details', 'user:details']))
+                )
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized - JWT token not provided or expired.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Not Found - The requested page does not exist.'
+            ),
+        ]
+    )]
     /**
-     * This method retrieves all customers.
+     * Retrieves the list of customers with pagination.
      *
-     * @OA\Response(
-     *     response=200,
-     *     description="Return to customer list",
+     * This method returns a paginated list of the customers. It supports pagination via the
+     * page' and 'limit' parameters in the request. The results are cached to
+     * improve performance.
      *
-     *     @OA\JsonContent(
-     *        type="array",
+     * @return Response the customer in JSON format
      *
-     *        @OA\Items(ref=@Model(type=Customer::class, groups={'customer:details', 'user:details'}))
-     *     )
-     * )
-     *
-     * @OA\Parameter(
-     *     name="page",
-     *     in="query",
-     *     description="The page you want to retrieve",
-     *
-     *     @OA\Schema(type="int")
-     * )
-     *
-     * @OA\Parameter(
-     *     name="limit",
-     *     in="query",
-     *     description="The number of elements to be retrieved",
-     *
-     *     @OA\Schema(type="int")
-     * )
-     *
-     * @OA\Tag(name="Customer")
-     *
-     * @param Request $request
-     * @param TagAwareCacheInterface $cache
-     * @param CustomerRepository $customerRepository
-     * @return Response
      * @throws InvalidArgumentException
+     *
+     * @example Request: GET /customers?page=2&limit=5
      */
     #[Route('/customers', name: 'list_customer', methods: ['GET'])]
     public function getAllCustomer(
@@ -135,6 +169,39 @@ class CustomerController extends AbstractController
         return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
+    #[OA\Response(
+        response: 204,
+        description: 'Returns the client list of the requested page.',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['customer:details', 'user:details']))
+        )
+    )]
+    #[OA\Response(
+        response: 404,
+        description: 'NOT FOUND',
+    )
+    ]
+    #[OA\Response(
+        response: 401,
+        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
+    )
+    ]
+    #[OA\Parameter(
+        name: 'page',
+        description: 'Requested result page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 1),
+        example: '1'
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        description: 'Number of results per page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 10),
+        example: '10'
+    )]
+    #[OA\Tag(name: 'Customers')]
     /**
      * Creates a new client and associates it with an existing user.
      *
@@ -206,6 +273,39 @@ class CustomerController extends AbstractController
         return new Response($jsonContent, Response::HTTP_CREATED, ['Content-Type' => 'application/json']);
     }
 
+    #[OA\Response(
+        response: 200,
+        description: 'Returns the client list of the requested page.',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['customer:details', 'user:details']))
+        )
+    )]
+    #[OA\Response(
+        response: 404,
+        description: 'NOT FOUND',
+    )
+    ]
+    #[OA\Response(
+        response: 401,
+        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
+    )
+    ]
+    #[OA\Parameter(
+        name: 'page',
+        description: 'Requested result page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 1),
+        example: '1'
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        description: 'Number of results per page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 10),
+        example: '10'
+    )]
+    #[OA\Tag(name: 'Customers')]
     /**
      * Updates an existing customer with the information provided in the request.
      *
@@ -264,9 +364,45 @@ class CustomerController extends AbstractController
         $cache->invalidateTags(['customersCache']);
         $this->entityManager->flush();
 
-        return new Response(null, Response::HTTP_NO_CONTENT);
+        $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
+        $jsonContent = $this->jmsSerializer->serialize($updateCustomer, 'json', $context);
+
+        return new JsonResponse($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json'], true);
     }
 
+    #[OA\Response(
+        response: 204,
+        description: 'Returns the client list of the requested page.',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['customer:details', 'user:details']))
+        )
+    )]
+    #[OA\Response(
+        response: 404,
+        description: 'NOT FOUND',
+    )
+    ]
+    #[OA\Response(
+        response: 401,
+        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
+    )
+    ]
+    #[OA\Parameter(
+        name: 'page',
+        description: 'Requested result page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 1),
+        example: '1'
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        description: 'Number of results per page',
+        in: 'query',
+        schema: new OA\Schema(type: 'int', default: 10),
+        example: '10'
+    )]
+    #[OA\Tag(name: 'Customers')]
     /**
      * Deletes a customer specified by its ID.
      *

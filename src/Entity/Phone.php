@@ -4,9 +4,9 @@ namespace App\Entity;
 
 use App\Repository\PhoneRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Hateoas\Configuration\Annotation as Hateoas;
 use JMS\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
-use Hateoas\Configuration\Annotation as Hateoas;
 
 /**
  * @Hateoas\Relation(
@@ -17,7 +17,6 @@ use Hateoas\Configuration\Annotation as Hateoas;
  *      ),
  *      exclusion = @Hateoas\Exclusion(groups="phone:details")
  * )
- *
  * @Hateoas\Relation(
  *      "update",
  *      href = @Hateoas\Route(
@@ -26,7 +25,6 @@ use Hateoas\Configuration\Annotation as Hateoas;
  *      ),
  *      exclusion = @Hateoas\Exclusion(groups="phone:details", excludeIf = "expr(not is_granted('ROLE_ADMIN'))"),
  * )
- *
  * @Hateoas\Relation(
  *      "delete",
  *      href = @Hateoas\Route(
