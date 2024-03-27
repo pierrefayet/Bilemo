@@ -321,7 +321,7 @@ class CustomerController extends AbstractController
      * {
      * "firstName": "Pierre",
      * lastName": "Fayet",
-     * "email": "tgilles@traore.fr",
+     * "email": "p.fayet@gmail.com",
      * "userId": 31
      * }
      * @example Possible answers:
