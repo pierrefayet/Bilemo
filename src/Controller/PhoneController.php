@@ -31,7 +31,7 @@ class PhoneController extends AbstractController
 
     #[OA\Response(
         response: 200,
-        description: 'Returns the phones list of the requested page.',
+        description: 'Retrieves the list of all phones with pagination.',
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
@@ -63,12 +63,7 @@ class PhoneController extends AbstractController
     )]
     #[OA\Tag(name: 'Phones')]
     /**
-     * Retrieves the list of all phones with pagination.
-     *
-     * This method returns a paginated list of phones. It supports pagination via the
-     * page' and 'limit' parameters in the request. The results are cached to
-     * improve performance. Caching is based on the pagination parameters,
-     * ensuring that different pages are cached separately.
+     * Fetches phones with support for pagination and caching for enhanced performance.
      *
      * @param Request                $request         the HTTP request containing pagination parameters
      * @param TagAwareCacheInterface $cache           the cache service
@@ -110,7 +105,7 @@ class PhoneController extends AbstractController
 
     #[OA\Response(
         response: 200,
-        description: 'Returns the phone of the requested page.',
+        description: 'Retrieves phone details by ID.',
         content: new OA\JsonContent(
             type: 'array',
             items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
@@ -142,8 +137,6 @@ class PhoneController extends AbstractController
     )]
     #[OA\Tag(name: 'Phones')]
     /**
-     * Retrieves phone details by ID.
-     *
      * Uses the ID in the URL to search for and return the details of a specific phone.
      * Data is filtered by the 'phone:details' serialization group.
      *
@@ -283,11 +276,7 @@ class PhoneController extends AbstractController
     )]
     #[OA\Tag(name: 'Phones')]
     /**
-     * This method expects data in JSON format in the body of the PUT request.
-     * It deserializes this data to update an existing Phone object,
-     * validates the updated object, and persists it in the database. The
-     * associated cache tags are invalidated to reflect the changes.
-     * The updated Phone object is then serialized and returned in the response.
+     * Updates a phone using JSON data, validates it, and returns the updated object after cache invalidation.
      *
      * @param Phone                  $currentPhone  the Phone object (automatically resolved by Symfony) to be updated
      * @param Request                $request       the HTTP request containing the update data in JSON format
@@ -361,10 +350,7 @@ class PhoneController extends AbstractController
     )]
     #[OA\Tag(name: 'Phones')]
     /**
-     * This method uses the phone ID provided in the URL to search for the phone and delete it from the database.
-     * and delete it from the database. An HTTP response with status 204 (No Content)
-     * is returned to indicate that the action has been performed successfully. Access to this
-     * method is secure and requires the user to have the ADMIN role.
+     * Deletes a phone by ID, returning HTTP 204 on success. Requires ADMIN role.
      *
      * @param Phone                  $phone         the Phone entity automatically resolved by Symfony from the ID in the URL
      * @param EntityManagerInterface $entityManager the entity manager for interacting with the database

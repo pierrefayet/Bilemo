@@ -220,17 +220,6 @@ class CustomerController extends AbstractController
      * "email": "jean.dupont@example.com",
      * "userId": 31
      * }
-     * //
-     * #[Route('/customers/{id}', name: 'detail_customer', methods: ['GET'])]
-     * public function getDetailCustomer(Customer $customer): Response
-     * {
-     * $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
-     * $jsonContent = $this->jmsSerializer->serialize($customer, 'json', $context);
-     *
-     * return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
-     * }
-     * /**
-     * This code allows you to create a customer.
      */
     #[Route('/customers', name: 'create_customer', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to create a customer')]
@@ -303,10 +292,7 @@ class CustomerController extends AbstractController
     )]
     #[OA\Tag(name: 'Customers')]
     /**
-     * This method updates the details of a specific customer identified by its ID in the URL.
-     * It deserializes the request body into a Customer entity and associates a User specified by userId.
-     * If the specified user does not exist, an error is returned.
-     * Cache tags associated with customers are invalidated after the update.
+     * Updates a customer by ID from request body, associating with a user by userId. Returns an error if user doesn't exist. Invalidates customer cache tags post-update.
      *
      * @param Customer               $currentCustomer the Customer entity automatically resolved by Symfony from the ID in the URL
      * @param Request                $request         the HTTP request containing the update data in JSON format
@@ -399,11 +385,7 @@ class CustomerController extends AbstractController
     )]
     #[OA\Tag(name: 'Customers')]
     /**
-     * This method deletes an existing customer from the database.
-     * The client ID is provided in the request URL. Once the client has been deleted, the method returns an
-     * HTTP response with status 204 to indicate that the action has been performed successfully.
-     * If the ID provided in the URL doesn't correspond to any client, Symfony will generate
-     * automatically generate a 404 response thanks to the param converter mechanism.
+     * Deletes a customer by ID, returning HTTP 204 on success. Requires ADMIN role.
      *
      * @param Customer $customer the Customer entity automatically resolved by Symfony from the ID in the URL
      *
