@@ -16,9 +16,11 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
@@ -139,20 +141,11 @@ class CustomerController extends AbstractController
      */
     #[Route('/customers', name: 'list_customer', methods: ['GET'])]
     public function getAllCustomer(
-        Request $request,
-        TagAwareCacheInterface $cache, CustomerRepository $customerRepository): Response
-    {
-        $page = max(filter_var(
-            $request->get('page', 1),
-            FILTER_VALIDATE_INT,
-            ['options' => ['default' => 1]]),
-            1);
-        $limit = max(filter_var(
-            $request->get('limit', 3),
-            FILTER_VALIDATE_INT,
-            ['options' => ['default' => 3]]),
-            1);
-
+        TagAwareCacheInterface $cache,
+        CustomerRepository $customerRepository,
+        #[MapQueryParameter] int $page = 1,
+        #[MapQueryParameter] int $limit = 3
+    ): Response {
         $idCache = 'getAllCustomer'.$page.'-'.$limit;
 
         $customerList = $cache->get($idCache, function (ItemInterface $item) use ($customerRepository, $page, $limit) {
@@ -207,9 +200,8 @@ class CustomerController extends AbstractController
      *  error is found, associates the customer with a user specified by `userId` in the request body.
      * in the query body before persisting the customer in the database.
      *
-     * @param Request            $request        the HTTP request containing the client data
-     * @param UserRepository     $userRepository the repository for retrieving User entities
-     * @param ValidatorInterface $validator      the validation service for checking client data
+     * @param Request            $request   the HTTP request containing the client data
+     * @param ValidatorInterface $validator the validation service for checking client data
      *
      * @return Response the HTTP response, with the client created in JSON format if creation is successful,
      *                  or with validation error messages if applicable
@@ -225,19 +217,22 @@ class CustomerController extends AbstractController
     #[Route('/customers', name: 'create_customer', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to create a customer')]
     public function createCustomer(
-        Customer $customer,
         Request $request,
-        UserRepository $userRepository,
         ValidatorInterface $validator,
-        UserPasswordHasherInterface $passwordHashed
+        UserPasswordHasherInterface $passwordHashed,
+        TagAwareCacheInterface $cache
     ): Response {
-        $password = $passwordHashed->hashPassword($customer, 'password');
-        $customer->setPassword($password);
+        $password = Uuid::v4();
+
         $newCustomer = $this->jmsSerializer->deserialize($request->getContent(), Customer::class, 'json');
 
         if (!$newCustomer instanceof Customer) {
             return $this->json(['error' => 'Invalid data provided'], Response::HTTP_BAD_REQUEST);
         }
+
+        $hashPassword = $passwordHashed->hashPassword($newCustomer, $password);
+        $newCustomer->setPassword($hashPassword);
+        $newCustomer->setRoles(['ROLE_USER']);
 
         $errors = $validator->validate($newCustomer);
 
@@ -247,22 +242,10 @@ class CustomerController extends AbstractController
 
         $this->entityManager->persist($newCustomer);
         $this->entityManager->flush();
-
-        $content = $request->toArray();
-        $idUser = $content['userId'] ?? -1;
-
-        $user = $userRepository->find($idUser);
-
-        if (null === $user) {
-            return $this->json(
-                ['error' => 'user is not found'], Response::HTTP_BAD_REQUEST
-            );
-        }
-
-        $newCustomer->addUser($user);
+        $cache->invalidateTags(['customersCache']);
 
         $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
-        $jsonContent = $this->jmsSerializer->serialize($newCustomer, 'json', $context);
+        $jsonContent = $this->jmsSerializer->serialize(['password' => $password, 'customer' => $newCustomer], 'json', $context);
 
         return new Response($jsonContent, Response::HTTP_CREATED, ['Content-Type' => 'application/json']);
     }
@@ -339,7 +322,7 @@ class CustomerController extends AbstractController
         );
 
         $content = $request->toArray();
-        $userId = $content['userId'] ?? -1;
+        $userId = $content['userId'] ?? null;
 
         if ($userId) {
             $user = $userRepository->find($userId);
@@ -408,10 +391,11 @@ class CustomerController extends AbstractController
      */
     #[Route('/customers/{id}', name: 'delete_customer', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to delete a customer')]
-    public function deleteCustomer(Customer $customer): Response
+    public function deleteCustomer(Customer $customer, TagAwareCacheInterface $cache): Response
     {
         $this->entityManager->remove($customer);
         $this->entityManager->flush();
+        $cache->invalidateTags(['customersCache']);
 
         return new Response(
             null, Response::HTTP_NO_CONTENT

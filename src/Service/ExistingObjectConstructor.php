@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use JMS\Serializer\Construction\ObjectConstructorInterface;
+use JMS\Serializer\Construction\UnserializeObjectConstructor;
 use JMS\Serializer\DeserializationContext;
 use JMS\Serializer\Metadata\ClassMetadata;
 use JMS\Serializer\Visitor\DeserializationVisitorInterface;
@@ -11,16 +12,9 @@ class ExistingObjectConstructor implements ObjectConstructorInterface
 {
     private ObjectConstructorInterface $fallbackConstructor;
 
-    /**
-     * @param string $fallbackConstructorClassName Fallback object constructor
-     */
-    public function __construct(string $fallbackConstructorClassName)
+    public function __construct()
     {
-        $instance = new $fallbackConstructorClassName();
-        if (!$instance instanceof ObjectConstructorInterface) {
-            throw new \InvalidArgumentException(sprintf('The class %s must implement ObjectConstructorInterface.', $fallbackConstructorClassName));
-        }
-        $this->fallbackConstructor = $instance;
+        $this->fallbackConstructor = new UnserializeObjectConstructor();
     }
 
     /**

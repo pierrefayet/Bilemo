@@ -16,6 +16,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -76,19 +77,13 @@ class PhoneController extends AbstractController
      * @example Request: GET /api/phones?page=2&limit=5
      */
     #[Route('/phones', name: 'list_phone', requirements: ['page' => '\d+', 'limit' => '\d+'], methods: ['GET'])]
-    public function getAllPhone(Request $request, TagAwareCacheInterface $cache, PhoneRepository $phoneRepository): JsonResponse
-    {
-        $page = max(filter_var(
-            $request->get('page', 1),
-            FILTER_VALIDATE_INT,
-            ['options' => ['default' => 1]]),
-            1);
-        $limit = max(filter_var(
-            $request->get('limit', 3),
-            FILTER_VALIDATE_INT,
-            ['options' => ['default' => 3]]),
-            1);
-
+    public function getAllPhone(
+        Request $request,
+        TagAwareCacheInterface $cache,
+        PhoneRepository $phoneRepository,
+        #[MapQueryParameter] int $page = 1,
+        #[MapQueryParameter] int $limit = 3
+    ): JsonResponse {
         $idCache = 'getAllPhone'.$page.'-'.$limit;
 
         $phoneList = $cache->get($idCache, function (ItemInterface $item) use ($phoneRepository, $page, $limit) {

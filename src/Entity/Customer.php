@@ -70,7 +70,7 @@ class Customer implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['customer:details'])]
     private ?string $email = null;
 
-    #[ORM\Column(type: 'datetime_immutable')]
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
     #[Groups(['customer:details'])]
     private ?\DateTimeImmutable $createdAt = null;
 
@@ -91,7 +91,6 @@ class Customer implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
         $this->users = new ArrayCollection();
     }
 

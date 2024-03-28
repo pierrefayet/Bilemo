@@ -112,15 +112,10 @@ class Phone
     #[Groups(['phone:details'])]
     private ?string $stockQuantity = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     #[Assert\Type("\DateTimeImmutable")]
     #[Groups(['phone:details'])]
     private ?\DateTimeImmutable $releaseDate = null;
-
-    public function __construct()
-    {
-        $this->releaseDate = new \DateTimeImmutable();
-    }
 
     public function getId(): ?int
     {

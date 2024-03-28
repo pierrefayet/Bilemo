@@ -10,6 +10,7 @@ use Doctrine\Persistence\ObjectManager;
 use Faker\Factory;
 use Faker\Generator;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Validator\Constraints\Uuid;
 
 class AppFixture extends Fixture
 {
@@ -34,21 +35,11 @@ class AppFixture extends Fixture
             $users[] = $user;
         }
 
-        $admin = new Customer();
-        $admin->setEmail('admin@bilemo.com');
-        $password = $this->passwordHashed->hashPassword($admin, 'password');
-        $admin->setPassword($password);
-        $admin->setName($this->faker->unique()->name);
-        $admin->setCreatedAt(new \DateTimeImmutable());
-        $admin->setRoles(['ROLE_ADMIN']);
-        $manager->persist($admin);
-
         $customers = [];
         for ($i = 0; $i < 5; ++$i) {
             $customer = new Customer();
             $customer->setEmail($this->faker->unique()->email);
             $customer->setName($this->faker->unique()->name);
-            $customer->setCreatedAt(new \DateTimeImmutable());
             $password = $this->passwordHashed->hashPassword($customer, 'password');
             $customer->setPassword($password);
             $customer->setRoles(['ROLE_CUSTOMER']);
@@ -75,7 +66,6 @@ class AppFixture extends Fixture
             $phone->setProcessor($this->faker->randomElement(['Snapdragon 888', 'A14 Bionic', 'Kirin 9000', 'Exynos 2100']).'');
             $phone->setStockQuantity((string) $this->faker->numberBetween(0, 100));
             $phone->setStorageCapacity($this->faker->numberBetween(0, 900).'GB');
-            $phone->setReleaseDate(new \DateTimeImmutable());
             $manager->persist($phone);
         }
 

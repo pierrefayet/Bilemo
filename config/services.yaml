@@ -23,10 +23,6 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
     jms_serializer.object_constructor:
-        alias: jms_serializer.initialized_object_constructor
-
-    jms_serializer.initialized_object_constructor:
         class: App\Service\ExistingObjectConstructor
-        arguments: [ '\JMS\Serializer\Construction\UnserializeObjectConstructor' ]
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
