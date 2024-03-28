@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Customer;
 use App\Entity\Phone;
 use App\Repository\PhoneRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -30,52 +29,45 @@ class PhoneController extends AbstractController
     {
     }
 
-    #[OA\Response(
-        response: 200,
-        description: 'Retrieves the list of all phones with pagination.',
-        content: new OA\JsonContent(
-            type: 'array',
-            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
-        )
+    #[OA\Get(
+        path: '/api/phones',
+        summary: 'Retrieves a paginated list of phones.',
+        tags: ['Phones'],
+        parameters: [
+            new OA\Parameter(
+                name: 'page',
+                description: 'The page number of the results to retrieve.',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 1)
+            ),
+            new OA\Parameter(
+                name: 'limit',
+                description: 'The number of results per page.',
+                in: 'query',
+                required: false,
+                schema: new OA\Schema(type: 'integer', default: 10)
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'A paginated list of phones retrieved successfully.',
+                content: new OA\JsonContent(
+                    type: 'array',
+                    items: new OA\Items(ref: new Model(type: Phone::class, groups: ['phone:details']))
+                )
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'No phones found.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized - JWT token expired, invalid, or not provided.'
+            ),
+        ]
     )]
-    #[OA\Response(
-        response: 404,
-        description: 'NOT FOUND',
-    )
-    ]
-    #[OA\Response(
-        response: 401,
-        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
-    )
-    ]
-    #[OA\Parameter(
-        name: 'page',
-        description: 'Requested result page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 1),
-        example: '1'
-    )]
-    #[OA\Parameter(
-        name: 'limit',
-        description: 'Number of results per page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 10),
-        example: '10'
-    )]
-    #[OA\Tag(name: 'Phones')]
-    /**
-     * Fetches phones with support for pagination and caching for enhanced performance.
-     *
-     * @param Request                $request         the HTTP request containing pagination parameters
-     * @param TagAwareCacheInterface $cache           the cache service
-     * @param PhoneRepository        $phoneRepository the repository for accessing phone data
-     *
-     * @return JsonResponse the phone list in JSON format
-     *
-     * @throws InvalidArgumentException
-     *
-     * @example Request: GET /api/phones?page=2&limit=5
-     */
     #[Route('/phones', name: 'list_phone', requirements: ['page' => '\d+', 'limit' => '\d+'], methods: ['GET'])]
     public function getAllPhone(
         Request $request,
@@ -98,33 +90,35 @@ class PhoneController extends AbstractController
         return new JsonResponse($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json'], true);
     }
 
-    #[OA\Response(
-        response: 200,
-        description: 'Retrieves phone details by ID.',
-        content: new OA\JsonContent(
-            type: 'array',
-            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
-        )
+    #[OA\Get(
+        path: '/api/phones/{id}',
+        summary: 'Get phone details by ID.',
+        tags: ['Phones'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'The ID of the phone to retrieve details for.',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Phone details retrieved successfully.',
+                content: new OA\JsonContent(ref: new Model(type: Phone::class, groups: ['phone:details']))
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Phone not found.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized - JWT token expired, invalid, or not provided.'
+            ),
+        ]
     )]
-    #[OA\Response(
-        response: 404,
-        description: 'NOT FOUND',
-    )
-    ]
-    #[OA\Response(
-        response: 401,
-        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
-    )
-    ]
-    #[OA\Tag(name: 'Phones')]
-    /**
-     * Uses the ID in the URL to search for and return the details of a specific phone.
-     * Data is filtered by the 'phone:details' serialization group.
-     *
-     * @param Phone $phone the Phone entity resolved by Symfony using the ID in the URL
-     *
-     * @return Response phone details in JSON (HTTP 200)
-     */
     #[Route('/phones/{id}', name: 'detail_phone', methods: ['GET'])]
     public function getDetailPhone(Phone $phone): Response
     {
@@ -134,47 +128,43 @@ class PhoneController extends AbstractController
         return new Response($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json']);
     }
 
-    #[OA\Response(
-        response: 204,
-        description: 'Create a new phone.',
-        content: new OA\JsonContent(
-            type: 'array',
-            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
-        )
+    #[OA\Post(
+        path: '/api/phones',
+        summary: 'Create a new phone',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'model', type: 'string', example: 'Model iphone16'),
+                    new OA\Property(property: 'manufacturer', type: 'string', example: 'Apple'),
+                    new OA\Property(property: 'processor', type: 'string', example: 'Exynos 2100'),
+                    new OA\Property(property: 'ram', type: 'string', example: '8 GB'),
+                    new OA\Property(property: 'storageCapacity', type: 'string', example: '265GB'),
+                    new OA\Property(property: 'cameraDetails', type: 'string', example: '43MP'),
+                    new OA\Property(property: 'batteryLife', type: 'string', example: '71 hours'),
+                    new OA\Property(property: 'screenSize', type: 'string', example: '6.48 pouces'),
+                    new OA\Property(property: 'price', type: 'string', example: '642'),
+                    new OA\Property(property: 'stockQuantity', type: 'string', example: '40'),
+                ],
+                type: 'object'
+            )
+        ),
+        tags: ['Phones'],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Phone created successfully'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'NOT FOUND'
+            ),
+        ]
     )]
-    #[OA\Response(
-        response: 404,
-        description: 'NOT FOUND',
-    )
-    ]
-    #[OA\Response(
-        response: 401,
-        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
-    )
-    ]
-    #[OA\Tag(name: 'Phones')]
-    /**
-     * Validates and persists phone data provided in JSON. Returns the created phone or
-     * validation errors.
-     *
-     * @param Request $request contains JSON with phone data
-     *
-     * @return JsonResponse the phone created (HTTP 201) or validation errors (HTTP 400)
-     *
-     * @example JSON for creation :
-     * {
-     * "model": "Model iphone16",
-     * "manufacturer": "Apple",
-     * "processor": "Exynos 2100",
-     * "ram": "8 GB",
-     * "storageCapacity": "265GB",
-     * "cameraDetails": "43MP",
-     * "batteryLife": "71 hours",
-     * "screenSize": "6.48 pouces",
-     * "price": "642",
-     * "stockQuantity": "40"
-     * }
-     */
     #[Route('/phones', name: 'create_phone', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to create a phone')]
     public function createPhone(
@@ -209,37 +199,45 @@ class PhoneController extends AbstractController
         return new JsonResponse($phoneJson, Response::HTTP_CREATED, ['Content-Type' => 'application/json'], true);
     }
 
-    #[OA\Response(
-        response: 204,
-        description: 'Updates the details of a specific phone.',
-        content: new OA\JsonContent(
-            type: 'array',
-            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
-        )
+    #[OA\Put(
+        path: '/api/phones/{id}',
+        summary: 'Updates a specific phone by ID.',
+        requestBody: new OA\RequestBody(
+            description: 'JSON payload to update the phone',
+            required: true,
+            content: new OA\JsonContent(
+                ref: new Model(type: Phone::class, groups: ['phone:details'])
+            )
+        ),
+        tags: ['Phones'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'ID of the phone to update',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Phone updated successfully.'
+            ),
+            new OA\Response(
+                response: 400,
+                description: 'Invalid data provided.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Phone not found.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized - JWT token expired, invalid, or not provided.'
+            ),
+        ]
     )]
-    #[OA\Response(
-        response: 404,
-        description: 'NOT FOUND',
-    )
-    ]
-    #[OA\Response(
-        response: 401,
-        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
-    )
-    ]
-    #[OA\Tag(name: 'Phones')]
-    /**
-     * Updates a phone using JSON data, validates it, and returns the updated object after cache invalidation.
-     *
-     * @param Phone                  $currentPhone  the Phone object (automatically resolved by Symfony) to be updated
-     * @param Request                $request       the HTTP request containing the update data in JSON format
-     * @param EntityManagerInterface $entityManager the entity manager for data persistence
-     * @param TagAwareCacheInterface $cache         the cache service for invalidating cache tags
-     *
-     * @return JsonResponse the HTTP response containing the updated Phone object in JSON format
-     *
-     * @throws InvalidArgumentException
-     */
     #[Route('/phones/{id}', name: 'update_phone', methods: ['PUT'])]
     #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to update a phone')]
     public function updatePhone(
@@ -269,35 +267,34 @@ class PhoneController extends AbstractController
         return new JsonResponse($jsonContent, Response::HTTP_OK, ['Content-Type' => 'application/json'], true);
     }
 
-    #[OA\Response(
-        response: 204,
-        description: 'Deletes a phone specified by its ID.',
-        content: new OA\JsonContent(
-            type: 'array',
-            items: new OA\Items(ref: new Model(type: Customer::class, groups: ['phone:details']))
-        )
+    #[OA\Delete(
+        path: '/api/phones/{id}',
+        summary: 'Deletes a specific phone by ID.',
+        tags: ['Phones'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'ID of the phone to delete',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'integer')
+            ),
+        ],
+        responses: [
+            new OA\Response(
+                response: 204,
+                description: 'Phone deleted successfully.'
+            ),
+            new OA\Response(
+                response: 404,
+                description: 'Phone not found.'
+            ),
+            new OA\Response(
+                response: 401,
+                description: 'Unauthorized - JWT token expired, invalid, or not provided.'
+            ),
+        ]
     )]
-    #[OA\Response(
-        response: 404,
-        description: 'NOT FOUND',
-    )
-    ]
-    #[OA\Response(
-        response: 401,
-        description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
-    )
-    ]
-    #[OA\Tag(name: 'Phones')]
-    /**
-     * Deletes a phone by ID, returning HTTP 204 on success. Requires ADMIN role.
-     *
-     * @param Phone                  $phone         the Phone entity automatically resolved by Symfony from the ID in the URL
-     * @param EntityManagerInterface $entityManager the entity manager for interacting with the database
-     *
-     * @return Response an HTTP response with status 204 (No Content)
-     *
-     * @throws InvalidArgumentException
-     */
     #[Route('/phones/{id}', name: 'delete_phone', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to delete a phone')]
     public function deletePhone(Phone $phone, EntityManagerInterface $entityManager, TagAwareCacheInterface $cache): Response
