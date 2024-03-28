@@ -52,20 +52,6 @@ class CustomerController extends AbstractController
         description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
     )
     ]
-    #[OA\Parameter(
-        name: 'page',
-        description: 'Requested result page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 1),
-        example: '1'
-    )]
-    #[OA\Parameter(
-        name: 'limit',
-        description: 'Number of results per page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 10),
-        example: '10'
-    )]
     #[OA\Tag(name: 'Customers')]
     /**
      * Retrieves the customer with pagination.
@@ -106,7 +92,7 @@ class CustomerController extends AbstractController
                 description: 'The number of items to fetch per page.',
                 in: 'query',
                 required: false,
-                schema: new OA\Schema(type: 'integer', default: 10)
+                schema: new OA\Schema(type: 'integer', default: 3)
             ),
         ],
         responses: [
@@ -179,20 +165,6 @@ class CustomerController extends AbstractController
         description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
     )
     ]
-    #[OA\Parameter(
-        name: 'page',
-        description: 'Requested result page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 1),
-        example: '1'
-    )]
-    #[OA\Parameter(
-        name: 'limit',
-        description: 'Number of results per page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 10),
-        example: '10'
-    )]
     #[OA\Tag(name: 'Customers')]
     /**
      * This method waits for the customer data in JSON format in the request body.
@@ -205,6 +177,8 @@ class CustomerController extends AbstractController
      *
      * @return Response the HTTP response, with the client created in JSON format if creation is successful,
      *                  or with validation error messages if applicable
+     *
+     * @throws InvalidArgumentException
      *
      * @example Request body for creation :
      * {
@@ -268,20 +242,6 @@ class CustomerController extends AbstractController
         description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
     )
     ]
-    #[OA\Parameter(
-        name: 'page',
-        description: 'Requested result page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 1),
-        example: '1'
-    )]
-    #[OA\Parameter(
-        name: 'limit',
-        description: 'Number of results per page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 10),
-        example: '10'
-    )]
     #[OA\Tag(name: 'Customers')]
     /**
      * Updates a customer by ID from request body, associating with a user by userId. Returns an error if user doesn't exist. Invalidates customer cache tags post-update.
@@ -361,20 +321,6 @@ class CustomerController extends AbstractController
         description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
     )
     ]
-    #[OA\Parameter(
-        name: 'page',
-        description: 'Requested result page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 1),
-        example: '1'
-    )]
-    #[OA\Parameter(
-        name: 'limit',
-        description: 'Number of results per page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 10),
-        example: '10'
-    )]
     #[OA\Tag(name: 'Customers')]
     /**
      * Deletes a customer by ID, returning HTTP 204 on success. Requires ADMIN role.
@@ -383,11 +329,12 @@ class CustomerController extends AbstractController
      *
      * @return Response an HTTP response with status 204 (No Content) to indicate successful deletion
      *
-     * @example Request URL for deletion:
-     * DELETE /api/customers/{id}
+     * @throws InvalidArgumentException
      * @example Possible responses:
      * - HTTP 204 No Content: Deletion was successful.
      * - HTTP 404 Not Found: No client matching the provided ID was found.
+     * @example Request URL for deletion:
+     * DELETE /api/customers/{id}
      */
     #[Route('/customers/{id}', name: 'delete_customer', methods: ['DELETE'])]
     #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to delete a customer')]

@@ -116,20 +116,6 @@ class PhoneController extends AbstractController
         description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
     )
     ]
-    #[OA\Parameter(
-        name: 'page',
-        description: 'Requested result page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 1),
-        example: '1'
-    )]
-    #[OA\Parameter(
-        name: 'limit',
-        description: 'Number of results per page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 10),
-        example: '10'
-    )]
     #[OA\Tag(name: 'Phones')]
     /**
      * Uses the ID in the URL to search for and return the details of a specific phone.
@@ -166,20 +152,6 @@ class PhoneController extends AbstractController
         description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
     )
     ]
-    #[OA\Parameter(
-        name: 'page',
-        description: 'Requested result page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 1),
-        example: '1'
-    )]
-    #[OA\Parameter(
-        name: 'limit',
-        description: 'Number of results per page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 10),
-        example: '10'
-    )]
     #[OA\Tag(name: 'Phones')]
     /**
      * Validates and persists phone data provided in JSON. Returns the created phone or
@@ -255,20 +227,6 @@ class PhoneController extends AbstractController
         description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
     )
     ]
-    #[OA\Parameter(
-        name: 'page',
-        description: 'Requested result page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 1),
-        example: '1'
-    )]
-    #[OA\Parameter(
-        name: 'limit',
-        description: 'Number of results per page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 10),
-        example: '10'
-    )]
     #[OA\Tag(name: 'Phones')]
     /**
      * Updates a phone using JSON data, validates it, and returns the updated object after cache invalidation.
@@ -329,20 +287,6 @@ class PhoneController extends AbstractController
         description: 'UNAUTHORIZED - JWT token expired, invalid or not provided.',
     )
     ]
-    #[OA\Parameter(
-        name: 'page',
-        description: 'Requested result page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 1),
-        example: '1'
-    )]
-    #[OA\Parameter(
-        name: 'limit',
-        description: 'Number of results per page',
-        in: 'query',
-        schema: new OA\Schema(type: 'int', default: 10),
-        example: '10'
-    )]
     #[OA\Tag(name: 'Phones')]
     /**
      * Deletes a phone by ID, returning HTTP 204 on success. Requires ADMIN role.
