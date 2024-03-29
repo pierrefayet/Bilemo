@@ -207,7 +207,7 @@ class CustomerController extends AbstractController
         return new Response($jsonContent, Response::HTTP_CREATED, ['Content-Type' => 'application/json']);
     }
 
-    #[OA\Patch(
+    #[OA\Put(
         path: '/api/customers/{id}',
         summary: 'Update an existing customer',
         requestBody: new OA\RequestBody(
