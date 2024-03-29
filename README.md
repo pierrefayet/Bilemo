@@ -48,6 +48,17 @@ symfony server:start
 
 After installation, open your browser and go to https://localhost:8000/api/doc to learn to consume the Bilemo Api.
 
+## Creating Admin User via Command Line
+
+Bilemo offers a command line utility to easily create an admin user. This can be particularly useful for setting up the application or creating an admin user for testing purposes.
+
+### Command
+The command to create an admin user is as follows:
+
+```bash
+php bin/console app:create-user email@example.com password
+```
+
 ## Contribution
 
 Contributions are what make the open source community a place of learning, inspiration and creativity. We encourage
