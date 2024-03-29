@@ -70,7 +70,6 @@ class PhoneController extends AbstractController
     )]
     #[Route('/phones', name: 'list_phone', requirements: ['page' => '\d+', 'limit' => '\d+'], methods: ['GET'])]
     public function getAllPhone(
-        Request $request,
         TagAwareCacheInterface $cache,
         PhoneRepository $phoneRepository,
         #[MapQueryParameter] int $page = 1,
