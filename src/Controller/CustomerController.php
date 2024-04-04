@@ -11,8 +11,6 @@ use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use OpenApi\Attributes as OA;
-use Psr\Cache\InvalidArgumentException;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,7 +24,7 @@ use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 #[Route('/api', name: 'api_')]
-class CustomerController extends AbstractController
+class CustomerController extends CustomAbstractController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -252,7 +250,6 @@ class CustomerController extends AbstractController
         ]
     )]
     #[Route('/customers/{id}', name: 'update_customer', methods: ['PUT'])]
-    #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to update a customer')]
     public function updateCustomer(
         Customer $currentCustomer,
         Request $request,
@@ -268,6 +265,10 @@ class CustomerController extends AbstractController
 
         $content = $request->toArray();
         $userId = $content['userId'] ?? null;
+
+        if ($this->getCustomer() !== $currentCustomer && !in_array('ROLE_ADMIN', $this->getCustomer()->getRoles())) {
+            throw new \Exception('Access denied');
+        }
 
         if ($userId) {
             $user = $userRepository->find($userId);

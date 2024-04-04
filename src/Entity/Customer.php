@@ -30,6 +30,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      exclusion = @Hateoas\Exclusion(groups="customer:details"),
  * )
  * @Hateoas\Relation(
+ *        "create",
+ *        href = @Hateoas\Route(
+ *        "api_create_customer"
+ *       ),
+ *       exclusion = @Hateoas\Exclusion(groups="customer:details"),
+ *  )
+ * @Hateoas\Relation(
  *      "update",
  *      href = @Hateoas\Route(
  *          "api_update_customer",

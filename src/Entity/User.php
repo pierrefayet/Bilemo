@@ -6,32 +6,70 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Hateoas\Configuration\Annotation as Hateoas;
 use JMS\Serializer\Annotation\Groups;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Serializer\Annotation\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
 
+/**
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *          "api_get_users_by_customer",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="user:details")
+ * )
+ * @Hateoas\Relation(
+ *       "list",
+ *       href = @Hateoas\Route(
+ *       "api_get_users_list_by_customer"
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="user:details"),
+ * )
+ * @Hateoas\Relation(
+ *      "update",
+ *      href = @Hateoas\Route(
+ *          "api_update_user",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="user:details"),
+ * )
+ * @Hateoas\Relation(
+ *      "create",
+ *      href = @Hateoas\Route(
+ *          "api_create_user"
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="user:details"),
+ * )
+ * @Hateoas\Relation(
+ *      "delete",
+ *      href = @Hateoas\Route(
+ *          "api_delete_user",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="customer:details"),
+ * )
+ */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['customer:details'])]
+    #[Groups(['user:details'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
     #[Assert\NotBlank(message: "L'adresse email ne doit pas être vide.")]
     #[Assert\Email(message: "L'adresse email '{{ value }}' n'est pas valide.")]
-    #[Groups(['customer:details'])]
+    #[Groups(['user:details'])]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\Length(min: 3, max: 255,
         minMessage: 'The first name must be at least {{ limit }} characters',
         maxMessage: 'The first name must be no more than {{ limit }} characters')]
-    #[Groups(['customer:details'])]
+    #[Groups(['user:details'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
@@ -40,7 +78,7 @@ class User
         max: 255,
         minMessage: 'The last name must be at least {{ limit }} characters',
         maxMessage: 'The last name must be no more than {{ limit }} characters')]
-    #[Groups(['customer:details'])]
+    #[Groups(['user:details'])]
     private ?string $lastName = null;
 
     /**
