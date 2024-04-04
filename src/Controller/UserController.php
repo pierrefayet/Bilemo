@@ -71,7 +71,7 @@ class UserController extends CustomAbstractController
         description: 'Fetches a paginated list of users, allowing consumers to browse through the customer data stored in the system. Pagination parameters "page" and "limit" can be used to navigate through the user list.',
         summary: 'Retrieves a list of users with pagination',
         security: [['bearerAuth' => []]],
-        tags: ['Customers'],
+        tags: ['Users'],
         parameters: [
             new OA\Parameter(
                 name: 'page',
