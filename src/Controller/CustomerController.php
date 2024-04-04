@@ -318,6 +318,7 @@ class CustomerController extends AbstractController
         ]
     )]
     #[Route('/customers/{id}', name: 'delete_customer', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN', message: 'you don\'t the necessary rights to delete a customer')]
     public function deleteCustomer(Customer $customer, TagAwareCacheInterface $cache): Response
     {
         $this->entityManager->remove($customer);
