@@ -7,9 +7,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation\Groups;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Serializer\Annotation\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -18,20 +15,20 @@ class User
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['customer:details'])]
+    #[Groups(['user:details'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
     #[Assert\NotBlank(message: "L'adresse email ne doit pas être vide.")]
     #[Assert\Email(message: "L'adresse email '{{ value }}' n'est pas valide.")]
-    #[Groups(['customer:details'])]
+    #[Groups(['user:details'])]
     private ?string $email = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\Length(min: 3, max: 255,
         minMessage: 'The first name must be at least {{ limit }} characters',
         maxMessage: 'The first name must be no more than {{ limit }} characters')]
-    #[Groups(['customer:details'])]
+    #[Groups(['user:details'])]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
@@ -40,7 +37,7 @@ class User
         max: 255,
         minMessage: 'The last name must be at least {{ limit }} characters',
         maxMessage: 'The last name must be no more than {{ limit }} characters')]
-    #[Groups(['customer:details'])]
+    #[Groups(['user:details'])]
     private ?string $lastName = null;
 
     /**
