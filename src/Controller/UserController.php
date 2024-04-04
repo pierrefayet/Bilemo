@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\User;
-use App\Repository\CustomerRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\DeserializationContext;
@@ -122,8 +121,7 @@ class UserController extends CustomAbstractController
         $userList = $cache->get($idCache, function (ItemInterface $item) use ($userRepository, $customer, $page, $limit) {
             $item->tag('userCache');
 
-
-            return $userRepository->findAllUserWithPagination($customer, $page, $limit);
+            return $userRepository->findAllUserWithPagination((int) $customer, $page, $limit);
         });
 
         $context = SerializationContext::create()->setGroups(['user:details']);
