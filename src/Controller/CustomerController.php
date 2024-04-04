@@ -11,7 +11,6 @@ use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use OpenApi\Attributes as OA;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,7 +24,7 @@ use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 #[Route('/api', name: 'api_')]
-class CustomerController extends AbstractController
+class CustomerController extends CustomAbstractController
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
@@ -267,7 +266,7 @@ class CustomerController extends AbstractController
         $content = $request->toArray();
         $userId = $content['userId'] ?? null;
 
-        if ($this->getUser() !== $currentCustomer && !in_array('ROLE_ADMIN', $this->getUser()->getRoles())) {
+        if ($this->getCustomer() !== $currentCustomer && !in_array('ROLE_ADMIN', $this->getCustomer()->getRoles())) {
             throw new \Exception('Access denied');
         }
 

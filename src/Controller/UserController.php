@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Customer;
 use App\Entity\Phone;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -11,17 +10,15 @@ use JMS\Serializer\SerializationContext;
 use JMS\Serializer\SerializerInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use OpenApi\Attributes as OA;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\Cache\TagAwareCacheInterface;
 
 #[Route('/api', name: 'api_')]
-class UserController extends AbstractController
+class UserController extends CustomAbstractController
 {
     #[OA\Get(
         path: '/api/users',
@@ -65,10 +62,10 @@ class UserController extends AbstractController
     #[Route('/users/{id}', name: 'get_users_by_customer', methods: ['GET'])]
     public function getUsersByCustomer(User $user, SerializerInterface $jmsSerializer): Response
     {
-        $users = $this->getUser()->getUsers()->toArray();
+        $users = $this->getCustomer()->getUsers()->toArray();
 
-        if (!in_array($user, $users)) {
-            throw new \Exception('access denied');
+        if (!in_array($user, $users) && !in_array('ROLE_ADMIN', $this->getCustomer()->getRoles())) {
+            throw new \Exception('Access denied');
         }
 
         $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
@@ -80,7 +77,7 @@ class UserController extends AbstractController
     #[Route('/users', name: 'get_users_list_by_customer', methods: ['GET'])]
     public function getListUserByCustomer(SerializerInterface $jmsSerializer): Response
     {
-        $users = $this->getUser()->getUsers()->toArray();
+        $users = $this->getCustomer()->getUsers()->toArray();
 
         $context = SerializationContext::create()->setGroups(['customer:details', 'user:details']);
         $jsonContent = $jmsSerializer->serialize($users, 'json', $context);
@@ -96,8 +93,6 @@ class UserController extends AbstractController
         SerializerInterface $jmsSerializer,
         EntityManagerInterface $entityManager
     ): Response {
-        $password = Uuid::v4();
-
         $newUser = $jmsSerializer->deserialize($request->getContent(), User::class, 'json');
 
         if (!$newUser instanceof User) {
@@ -136,9 +131,9 @@ class UserController extends AbstractController
             DeserializationContext::create()->setAttribute('target', $currentUser)
         );
 
-        $userCollection = $this->getUser()->getUsers()->toArray();
+        $userCollection = $this->getCustomer()->getUsers()->toArray();
 
-        if (!in_array($currentUser, $userCollection) && !in_array('ROLE_ADMIN', $this->getUser()->getRoles())) {
+        if (!in_array($currentUser, $userCollection) && !in_array('ROLE_ADMIN', $this->getCustomer()->getRoles())) {
             throw new \Exception('Access denied');
         }
 
@@ -188,7 +183,7 @@ class UserController extends AbstractController
     #[Route('/users/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteUser(User $user, TagAwareCacheInterface $cache, EntityManagerInterface $entityManager): Response
     {
-        $users = $this->getUser()->getUsers()->toArray();
+        $users = $this->getCustomer()->getUsers()->toArray();
 
         if (!in_array($user, $users)) {
             throw new \Exception('access denied');
@@ -201,7 +196,7 @@ class UserController extends AbstractController
             $entityManager->remove($user);
         }
 
-        $this->getUser()->removeUser($user);
+        $this->getCustomer()->removeUser($user);
         $entityManager->flush();
 
         return new Response(
