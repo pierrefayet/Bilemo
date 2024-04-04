@@ -8,7 +8,48 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use Hateoas\Configuration\Annotation as Hateoas;
 
+/**
+ * @Hateoas\Relation(
+ *      "self",
+ *      href = @Hateoas\Route(
+ *          "api_get_users_by_customer",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="user:details")
+ * )
+ * @Hateoas\Relation(
+ *       "list",
+ *       href = @Hateoas\Route(
+ *       "api_get_users_list_by_customer"
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="user:details"),
+ * )
+ * @Hateoas\Relation(
+ *      "update",
+ *      href = @Hateoas\Route(
+ *          "api_update_user",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="user:details"),
+ * )
+ * @Hateoas\Relation(
+ *      "create",
+ *      href = @Hateoas\Route(
+ *          "api_create_user"
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="user:details"),
+ * )
+ * @Hateoas\Relation(
+ *      "delete",
+ *      href = @Hateoas\Route(
+ *          "api_delete_user",
+ *          parameters = { "id" = "expr(object.getId())" }
+ *      ),
+ *      exclusion = @Hateoas\Exclusion(groups="customer:details"),
+ * )
+ */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 class User
 {
