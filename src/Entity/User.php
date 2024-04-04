@@ -47,7 +47,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "api_delete_user",
  *          parameters = { "id" = "expr(object.getId())" }
  *      ),
- *      exclusion = @Hateoas\Exclusion(groups="customer:details"),
+ *      exclusion = @Hateoas\Exclusion(groups="user:details"),
  * )
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
