@@ -168,7 +168,8 @@ class PhoneController extends CustomAbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         JMSSerializerInterface $jmsSerializer,
-        ValidatorInterface $validator
+        ValidatorInterface $validator,
+        TagAwareCacheInterface $cache
     ): JsonResponse {
         $phone = $jmsSerializer->deserialize($request->getContent(), Phone::class, 'json');
 
@@ -187,6 +188,7 @@ class PhoneController extends CustomAbstractController
             return $this->json(['error' => 'Invalid data'], Response::HTTP_BAD_REQUEST);
         }
 
+        $cache->invalidateTags(['phonesCache']);
         $entityManager->persist($phone);
         $entityManager->flush();
 
@@ -203,7 +205,19 @@ class PhoneController extends CustomAbstractController
             description: 'JSON payload to update the phone',
             required: true,
             content: new OA\JsonContent(
-                ref: new Model(type: Phone::class, groups: ['phone:details'])
+                properties: [
+                    new OA\Property(property: 'model', type: 'string', example: 'Model iphone166666666'),
+                    new OA\Property(property: 'manufacturer', type: 'string', example: 'Apple'),
+                    new OA\Property(property: 'processor', type: 'string', example: 'Exynos 2100251515'),
+                    new OA\Property(property: 'ram', type: 'string', example: '8 GB'),
+                    new OA\Property(property: 'storageCapacity', type: 'string', example: '265000GB'),
+                    new OA\Property(property: 'cameraDetails', type: 'string', example: '43MP'),
+                    new OA\Property(property: 'batteryLife', type: 'string', example: '71 hours'),
+                    new OA\Property(property: 'screenSize', type: 'string', example: '6.48 pouces'),
+                    new OA\Property(property: 'price', type: 'string', example: '642'),
+                    new OA\Property(property: 'stockQuantity', type: 'string', example: '40'),
+                ],
+                type: 'object'
             )
         ),
         tags: ['Phones'],

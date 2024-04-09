@@ -174,7 +174,12 @@ class UserController extends CustomAbstractController
         SerializerInterface $jmsSerializer,
         EntityManagerInterface $entityManager
     ): Response {
-        $newUser = $jmsSerializer->deserialize($request->getContent(), User::class, 'json');
+        $newUser = new User();
+        $newUser = $jmsSerializer->deserialize(
+            $request->getContent(),
+            User::class,
+            'json',
+            DeserializationContext::create()->setAttribute('target', $newUser));
 
         if (!$newUser instanceof User) {
             return $this->json(['error' => 'Invalid data provided'], Response::HTTP_BAD_REQUEST);
@@ -186,9 +191,10 @@ class UserController extends CustomAbstractController
             return $this->json($errors, Response::HTTP_BAD_REQUEST);
         }
 
+        $newUser->addCustomer($this->getCustomer());
         $entityManager->persist($newUser);
         $entityManager->flush();
-        $cache->invalidateTags(['customersCache']);
+        $cache->invalidateTags(['userCache']);
 
         $context = SerializationContext::create()->setGroups(['user:details']);
         $jsonContent = $jmsSerializer->serialize($newUser, 'json', $context);
@@ -252,7 +258,7 @@ class UserController extends CustomAbstractController
             return $this->json($errors, Response::HTTP_BAD_REQUEST);
         }
 
-        $cache->invalidateTags(['customersCache']);
+        $cache->invalidateTags(['userCache']);
         $entityManager->flush();
 
         $context = SerializationContext::create()->setGroups(['user:details']);
@@ -299,7 +305,7 @@ class UserController extends CustomAbstractController
         }
 
         $userAssociativeWithCustomer = count($user->getCustomers());
-        $cache->invalidateTags(['customersCache']);
+        $cache->invalidateTags(['userCache']);
 
         if (1 === $userAssociativeWithCustomer) {
             $entityManager->remove($user);
